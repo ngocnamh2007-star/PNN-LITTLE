@@ -5,10 +5,10 @@ import { PointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   defaultConfig,
   GiftSelection,
-  loadConfig,
-  loadSelection,
+  loadRemoteConfig,
+  loadRemoteSelection,
   LoveConfig,
-  saveSelection,
+  saveRemoteSelection,
 } from "./site-config";
 
 function playChime() {
@@ -47,8 +47,8 @@ export default function Home() {
   const dragPoint = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
-    const update = () => setConfig(loadConfig());
-    const updateSelection = () => setSelection(loadSelection());
+    const update = () => void loadRemoteConfig().then(setConfig);
+    const updateSelection = () => void loadRemoteSelection().then(setSelection);
     update();
     updateSelection();
     window.addEventListener("storage", update);
@@ -133,10 +133,10 @@ export default function Home() {
     }));
   }
 
-  function chooseGift(giftId: string) {
+  async function chooseGift(giftId: string) {
     const nextSelection = { giftId, selectedAt: new Date().toISOString() };
-    saveSelection(nextSelection);
     setSelection(nextSelection);
+    await saveRemoteSelection(nextSelection);
   }
 
   return (

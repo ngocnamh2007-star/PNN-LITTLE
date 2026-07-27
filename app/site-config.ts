@@ -94,3 +94,67 @@ export function saveSelection(selection: GiftSelection | null) {
   else localStorage.removeItem(SELECTION_KEY);
   window.dispatchEvent(new Event("love-selection-updated"));
 }
+
+export async function loadRemoteConfig(): Promise<LoveConfig> {
+  if (["localhost", "127.0.0.1"].includes(window.location.hostname)) return loadConfig();
+  try {
+    const response = await fetch("/api/config", { cache: "no-store" });
+    if (!response.ok) throw new Error("Config unavailable");
+    const payload = (await response.json()) as { config: LoveConfig };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload.config));
+    return payload.config;
+  } catch {
+    return loadConfig();
+  }
+}
+
+export async function saveRemoteConfig(config: LoveConfig) {
+  if (["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+    saveConfig(config);
+    return;
+  }
+  const response = await fetch("/api/config", {
+    method: "PUT",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ config }),
+  });
+  if (!response.ok) throw new Error("Unable to save online");
+  saveConfig(config);
+}
+
+export async function loadRemoteSelection(): Promise<GiftSelection | null> {
+  if (["localhost", "127.0.0.1"].includes(window.location.hostname)) return loadSelection();
+  try {
+    const response = await fetch("/api/selection", { cache: "no-store" });
+    if (!response.ok) throw new Error("Selection unavailable");
+    const payload = (await response.json()) as { selection: GiftSelection | null };
+    if (payload.selection) saveSelection(payload.selection);
+    return payload.selection;
+  } catch {
+    return loadSelection();
+  }
+}
+
+export async function saveRemoteSelection(selection: GiftSelection) {
+  if (["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+    saveSelection(selection);
+    return;
+  }
+  const response = await fetch("/api/selection", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ selection }),
+  });
+  if (!response.ok) throw new Error("Unable to save selection");
+  saveSelection(selection);
+}
+
+export async function clearRemoteSelection() {
+  if (["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+    saveSelection(null);
+    return;
+  }
+  const response = await fetch("/api/selection", { method: "DELETE" });
+  if (!response.ok) throw new Error("Unable to clear selection");
+  saveSelection(null);
+}
