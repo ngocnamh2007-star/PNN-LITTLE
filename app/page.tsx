@@ -284,7 +284,7 @@ export default function Home() {
                     <button type="button" className="gift-option" key={gift.id} onClick={() => chooseGift(gift.id)}>
                       <span>{gift.emoji}</span>
                       <strong>{gift.title}</strong>
-                      <small>{gift.description}</small>
+                      <small>Chạm để mở món quà</small>
                     </button>
                   ))}
                 </div>

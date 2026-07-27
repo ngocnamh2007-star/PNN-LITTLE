@@ -430,7 +430,7 @@ export default function AdminPage() {
         <section className="admin-panel gifts-panel">
           <div className="panel-heading">
             <span>04</span>
-            <div><h2>Các phần quà</h2><p>Người xem chỉ được chọn một món; những món còn lại sẽ được ẩn.</p></div>
+            <div><h2>Các phần quà</h2><p>Nội dung bên dưới chỉ hiện sau khi người nhận chọn; những món còn lại sẽ được ẩn.</p></div>
           </div>
           <div className="gift-editor-list">
             {config.gifts.map((gift, index) => (
