@@ -3,11 +3,20 @@ import { defaultConfig, LoveConfig } from "../../site-config";
 import { readState, writeState } from "../state-store";
 
 const CONFIG_KEY = "love-config";
+const MUSIC_STATE_KEY = "love-music";
 
 export async function GET() {
   try {
-    const config = await readState<LoveConfig>(CONFIG_KEY);
-    return Response.json({ config: config ?? defaultConfig });
+    const [config, music] = await Promise.all([
+      readState<LoveConfig>(CONFIG_KEY),
+      readState<LoveConfig["music"]>(MUSIC_STATE_KEY),
+    ]);
+    return Response.json({
+      config: {
+        ...(config ?? defaultConfig),
+        music: music ?? config?.music ?? null,
+      },
+    });
   } catch {
     return Response.json({ config: defaultConfig });
   }

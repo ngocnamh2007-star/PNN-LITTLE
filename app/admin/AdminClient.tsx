@@ -153,7 +153,8 @@ export default function AdminPage() {
   async function pickMusic(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("audio/")) {
+    const audioExtensions = /\.(mp3|m4a|aac|wav|ogg|oga|webm|flac)$/i;
+    if (!file.type.startsWith("audio/") && !audioExtensions.test(file.name)) {
       setStatus("Tệp đã chọn không phải là âm thanh.");
       event.target.value = "";
       return;
@@ -176,11 +177,14 @@ export default function AdminPage() {
       };
       if (!response.ok || !payload.music) throw new Error(payload.error || "Upload failed");
       const nextConfig = { ...config, music: payload.music };
-      await saveRemoteConfig(nextConfig);
       setConfig(nextConfig);
       setStatus(`Đã tải và lưu bài “${file.name}”`);
-    } catch {
-      setStatus("Không thể tải nhạc lên. Bạn hãy thử tệp khác.");
+    } catch (error) {
+      setStatus(
+        error instanceof Error && error.message !== "Upload failed"
+          ? `Không thể tải nhạc: ${error.message}`
+          : "Không thể tải nhạc lên. Hãy kiểm tra tệp nhỏ hơn 25 MB rồi thử lại.",
+      );
     } finally {
       setUploadingMusic(false);
       event.target.value = "";
@@ -193,7 +197,6 @@ export default function AdminPage() {
       const response = await fetch("/api/music", { method: "DELETE" });
       if (!response.ok) throw new Error("Delete failed");
       const nextConfig = { ...config, music: null };
-      await saveRemoteConfig(nextConfig);
       setConfig(nextConfig);
       setStatus("Đã xóa nhạc nền");
     } catch {

@@ -1,7 +1,9 @@
 import { env } from "cloudflare:workers";
 import { isAdminRequest } from "../../admin-auth";
+import { deleteState, writeState } from "../state-store";
 
 const MUSIC_KEY = "music/current";
+const MUSIC_STATE_KEY = "love-music";
 const MAX_MUSIC_BYTES = 25 * 1024 * 1024;
 
 export async function GET(request: Request) {
@@ -77,7 +79,11 @@ export async function POST(request: Request) {
 
   const form = await request.formData();
   const music = form.get("music");
-  if (!(music instanceof File) || !music.type.startsWith("audio/")) {
+  const audioExtensions = /\.(mp3|m4a|aac|wav|ogg|oga|webm|flac)$/i;
+  if (
+    !(music instanceof File) ||
+    (!music.type.startsWith("audio/") && !audioExtensions.test(music.name))
+  ) {
     return Response.json({ error: "Invalid audio file" }, { status: 400 });
   }
   if (music.size > MAX_MUSIC_BYTES) {
@@ -105,13 +111,13 @@ export async function POST(request: Request) {
     });
   }
 
-  return Response.json({
-    music: {
-      name: music.name,
-      type: music.type || "audio/mpeg",
-      url: `/api/music?v=${Date.now()}`,
-    },
-  });
+  const track = {
+    name: music.name,
+    type: music.type || "audio/mpeg",
+    url: `/api/music?v=${Date.now()}`,
+  };
+  await writeState(MUSIC_STATE_KEY, track);
+  return Response.json({ music: track });
 }
 
 export async function DELETE(request: Request) {
@@ -120,5 +126,6 @@ export async function DELETE(request: Request) {
   }
   const media = env.MEDIA as unknown as { delete: (key: string) => Promise<void> };
   await media.delete(MUSIC_KEY);
+  await deleteState(MUSIC_STATE_KEY);
   return Response.json({ ok: true });
 }
