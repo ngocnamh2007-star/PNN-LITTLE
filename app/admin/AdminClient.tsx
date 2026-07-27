@@ -73,15 +73,20 @@ export default function AdminPage() {
 
   useEffect(() => {
     const updateSelection = () => void loadRemoteSelection().then(setSelection);
+    const updateSelectionWhenVisible = () => {
+      if (document.visibilityState === "visible") updateSelection();
+    };
     void loadRemoteConfig().then(setConfig);
     updateSelection();
     window.addEventListener("storage", updateSelection);
     window.addEventListener("love-selection-updated", updateSelection);
-    const selectionPolling = window.setInterval(updateSelection, 2500);
+    document.addEventListener("visibilitychange", updateSelectionWhenVisible);
+    const selectionPolling = window.setInterval(updateSelectionWhenVisible, 15000);
     return () => {
       window.clearInterval(selectionPolling);
       window.removeEventListener("storage", updateSelection);
       window.removeEventListener("love-selection-updated", updateSelection);
+      document.removeEventListener("visibilitychange", updateSelectionWhenVisible);
     };
   }, []);
 

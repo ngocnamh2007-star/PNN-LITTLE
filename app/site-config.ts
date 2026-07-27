@@ -137,7 +137,11 @@ export async function loadRemoteSelection(): Promise<GiftSelection | null> {
     const response = await fetch("/api/selection", { cache: "no-store" });
     if (!response.ok) throw new Error("Selection unavailable");
     const payload = (await response.json()) as { selection: GiftSelection | null };
-    if (payload.selection) saveSelection(payload.selection);
+    if (payload.selection) {
+      localStorage.setItem(SELECTION_KEY, JSON.stringify(payload.selection));
+    } else {
+      localStorage.removeItem(SELECTION_KEY);
+    }
     return payload.selection;
   } catch {
     return loadSelection();
