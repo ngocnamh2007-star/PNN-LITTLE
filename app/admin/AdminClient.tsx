@@ -67,6 +67,9 @@ export default function AdminPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [uploadingMusic, setUploadingMusic] = useState(false);
+  const [musicProgress, setMusicProgress] = useState(0);
+  const [selectedMusic, setSelectedMusic] = useState<File | null>(null);
+  const [musicStatus, setMusicStatus] = useState("");
 
   useEffect(() => {
     const updateSelection = () => void loadRemoteSelection().then(setSelection);
@@ -150,44 +153,83 @@ export default function AdminPage() {
     }
   }
 
-  async function pickMusic(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
+  function pickMusic(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.currentTarget.files?.[0];
     if (!file) return;
     const audioExtensions = /\.(mp3|m4a|aac|wav|ogg|oga|webm|flac)$/i;
     if (!file.type.startsWith("audio/") && !audioExtensions.test(file.name)) {
-      setStatus("Tệp đã chọn không phải là âm thanh.");
+      setMusicStatus("Tệp đã chọn không phải là âm thanh.");
       event.target.value = "";
       return;
     }
     if (file.size > 25 * 1024 * 1024) {
-      setStatus("Tệp nhạc cần nhỏ hơn 25 MB.");
+      setMusicStatus("Tệp nhạc cần nhỏ hơn 25 MB.");
       event.target.value = "";
       return;
     }
+    setSelectedMusic(file);
+    setMusicStatus(`Đã chọn “${file.name}”. Bấm “Tải bài này lên” để hoàn tất.`);
+  }
 
+  async function uploadMusic() {
+    const file = selectedMusic;
+    if (!file || uploadingMusic) return;
     setUploadingMusic(true);
-    setStatus("Đang tải nhạc lên...");
+    setMusicProgress(0);
+    setMusicStatus(`Đang tải “${file.name}” lên, bạn đợi một chút...`);
     try {
-      const form = new FormData();
-      form.append("music", file);
-      const response = await fetch("/api/music", { method: "POST", body: form });
-      const payload = (await response.json()) as {
-        music?: LoveConfig["music"];
-        error?: string;
-      };
-      if (!response.ok || !payload.music) throw new Error(payload.error || "Upload failed");
-      const nextConfig = { ...config, music: payload.music };
+      const chunkSize = 700 * 1024;
+      const totalChunks = Math.ceil(file.size / chunkSize);
+      const uploadId = crypto.randomUUID();
+      let uploadedMusic: LoveConfig["music"] = null;
+
+      for (let part = 0; part < totalChunks; part++) {
+        const params = new URLSearchParams({
+          uploadId,
+          part: String(part),
+          total: String(totalChunks),
+          name: file.name,
+          type: file.type || "audio/mpeg",
+          size: String(file.size),
+        });
+        const response = await fetch(`/api/music?${params}`, {
+          method: "POST",
+          headers: { "content-type": "application/octet-stream" },
+          body: file.slice(part * chunkSize, Math.min(file.size, (part + 1) * chunkSize)),
+        });
+        const responseText = await response.text();
+        let payload: {
+          music?: LoveConfig["music"];
+          error?: string;
+        } = {};
+        try {
+          payload = JSON.parse(responseText) as typeof payload;
+        } catch {
+          payload = {};
+        }
+        if (!response.ok) throw new Error(payload.error || `Lỗi ở phần ${part + 1}`);
+        if (payload.music) uploadedMusic = payload.music;
+        const progress = Math.round(((part + 1) / totalChunks) * 100);
+        setMusicProgress(progress);
+        setMusicStatus(`Đang tải “${file.name}”… ${progress}%`);
+        if (part < totalChunks - 1) {
+          await new Promise((resolve) => window.setTimeout(resolve, 1100));
+        }
+      }
+
+      if (!uploadedMusic) throw new Error("Máy chủ chưa hoàn tất bài nhạc");
+      const nextConfig = { ...config, music: uploadedMusic };
       setConfig(nextConfig);
-      setStatus(`Đã tải và lưu bài “${file.name}”`);
+      setSelectedMusic(null);
+      setMusicStatus(`✓ Đã tải và lưu bài “${file.name}” thành công.`);
     } catch (error) {
-      setStatus(
+      setMusicStatus(
         error instanceof Error && error.message !== "Upload failed"
           ? `Không thể tải nhạc: ${error.message}`
           : "Không thể tải nhạc lên. Hãy kiểm tra tệp nhỏ hơn 25 MB rồi thử lại.",
       );
     } finally {
       setUploadingMusic(false);
-      event.target.value = "";
     }
   }
 
@@ -198,6 +240,8 @@ export default function AdminPage() {
       if (!response.ok) throw new Error("Delete failed");
       const nextConfig = { ...config, music: null };
       setConfig(nextConfig);
+      setSelectedMusic(null);
+      setMusicStatus("Đã xóa nhạc nền.");
       setStatus("Đã xóa nhạc nền");
     } catch {
       setStatus("Chưa thể xóa nhạc.");
@@ -442,8 +486,8 @@ export default function AdminPage() {
             <div className="music-empty">Chưa có nhạc nền. Người nhận sẽ nghe tiếng chuông mặc định.</div>
           )}
           <label className={`music-upload ${uploadingMusic ? "is-uploading" : ""}`}>
-            <strong>{uploadingMusic ? "Đang tải lên..." : config.music ? "Thay bài nhạc khác" : "＋ Tải nhạc lên"}</strong>
-            <span>Nhạc sẽ bắt đầu sau khi người nhận bấm “Mở món quà”.</span>
+            <strong>{config.music ? "Chọn bài nhạc khác" : "＋ Chọn nhạc từ máy"}</strong>
+            <span>MP3, M4A, WAV, OGG… tối đa 25 MB</span>
             <input
               type="file"
               accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.oga,.webm,.flac"
@@ -451,6 +495,30 @@ export default function AdminPage() {
               onChange={pickMusic}
             />
           </label>
+          {selectedMusic && (
+            <div className="music-selected">
+              <div>
+                <small>TỆP ĐÃ CHỌN</small>
+                <strong>{selectedMusic.name}</strong>
+                <span>{(selectedMusic.size / 1024 / 1024).toFixed(1)} MB</span>
+              </div>
+              <button type="button" disabled={uploadingMusic} onClick={uploadMusic}>
+                {uploadingMusic ? `Đang tải ${musicProgress}%` : "Tải bài này lên"}
+              </button>
+            </div>
+          )}
+          {uploadingMusic && (
+            <div className="music-progress" aria-hidden="true">
+              <span style={{ width: `${musicProgress}%` }} />
+            </div>
+          )}
+          {musicStatus && (
+            <p className={`music-status ${uploadingMusic ? "is-loading" : ""}`} aria-live="polite">
+              {uploadingMusic && <span className="music-spinner" aria-hidden="true" />}
+              {musicStatus}
+            </p>
+          )}
+          <p className="music-note">Nhạc sẽ bắt đầu sau khi người nhận bấm “Mở món quà”.</p>
         </section>
 
         <section className="admin-panel result-panel">

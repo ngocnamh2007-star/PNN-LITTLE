@@ -164,6 +164,18 @@ button { color: inherit; }
 .music-upload span { color: #998b9c; font-size: 11px; }
 .music-upload input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .music-upload.is-uploading { opacity: .6; cursor: wait; }
+.music-selected { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 12px; padding: 14px 15px; border: 1px solid #68d9b13b; border-radius: 14px; background: #249b7412; }
+.music-selected > div { min-width: 0; display: grid; gap: 3px; }
+.music-selected small { color: #82d8bb; font-size: 9px; font-weight: 900; letter-spacing: .14em; }
+.music-selected strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+.music-selected span { color: #9c8fa0; font-size: 11px; }
+.music-selected button { flex: 0 0 auto; padding: 10px 14px; border: 0; border-radius: 10px; color: white; background: linear-gradient(90deg, #e92d83, #9a35da); cursor: pointer; font-weight: 800; }
+.music-selected button:disabled { opacity: .6; cursor: wait; }
+.music-progress { height: 6px; margin-top: 10px; overflow: hidden; border-radius: 100px; background: #ffffff14; }
+.music-progress span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #ee348b, #ae51ef); box-shadow: 0 0 12px #ec3c9a; transition: width .2s ease; }
+.music-status { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 12px 0 0; color: #ffafd3; font-size: 12px; text-align: center; }
+.music-spinner { width: 14px; height: 14px; flex: 0 0 auto; border: 2px solid #ffffff35; border-top-color: #ff69ae; border-radius: 50%; animation: musicSpin .7s linear infinite; }
+.music-note { margin: 9px 0 0; color: #887c8c; font-size: 11px; text-align: center; }
 .selection-result { display: flex; align-items: center; gap: 16px; padding: 17px; border: 1px solid #58d7a932; border-radius: 16px; background: #2a9a7314; }
 .selection-result > span { font-size: 44px; }
 .selection-result > div { flex: 1; display: grid; gap: 3px; }
@@ -215,6 +227,7 @@ button { color: inherit; }
 @keyframes tunnelBreath { to { opacity: .35; transform: translateZ(-260px) scale(1.1); } }
 @keyframes hintFade { 0%, 60% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes appear { from { opacity: 0; transform: scale(.6); filter: blur(12px); } to { opacity: 1; transform: scale(1); filter: blur(0); } }
+@keyframes musicSpin { to { transform: rotate(360deg); } }
 
 @media (max-width: 520px) {
   .intro-card { padding: 34px 22px 24px; }
@@ -229,6 +242,7 @@ button { color: inherit; }
   .gifts-panel, .music-panel, .result-panel, .security-panel { grid-column: auto; }
   .music-current { grid-template-columns: auto 1fr; }
   .music-current > button { grid-column: 2; justify-self: start; }
+  .music-selected { align-items: stretch; flex-direction: column; }
   .password-grid { grid-template-columns: 1fr; }
   .gift-editor { grid-template-columns: 48px 1fr; }
   .gift-editor > button { grid-column: 2; }
