@@ -1,4 +1,4 @@
-import { getChatGPTUser } from "../../chatgpt-auth";
+import { isAdminRequest } from "../../admin-auth";
 import { GiftSelection } from "../../site-config";
 import { deleteState, readState, writeState } from "../state-store";
 
@@ -21,9 +21,10 @@ export async function POST(request: Request) {
   return Response.json({ selection: payload.selection }, { status: 201 });
 }
 
-export async function DELETE() {
-  const user = await getChatGPTUser();
-  if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
+export async function DELETE(request: Request) {
+  if (!(await isAdminRequest(request))) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
   await deleteState(SELECTION_KEY);
   return Response.json({ selection: null });
 }

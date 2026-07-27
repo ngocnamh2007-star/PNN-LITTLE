@@ -1,4 +1,4 @@
-import { getChatGPTUser } from "../../chatgpt-auth";
+import { isAdminRequest } from "../../admin-auth";
 import { defaultConfig, LoveConfig } from "../../site-config";
 import { readState, writeState } from "../state-store";
 
@@ -14,8 +14,9 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
-  const user = await getChatGPTUser();
-  if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  if (!(await isAdminRequest(request))) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const payload = (await request.json()) as { config?: LoveConfig };
   if (!payload.config?.recipient || !Array.isArray(payload.config.gifts)) {

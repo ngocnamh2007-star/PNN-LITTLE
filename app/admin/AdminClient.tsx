@@ -61,6 +61,9 @@ export default function AdminPage() {
   const [newLine, setNewLine] = useState("");
   const [selection, setSelection] = useState<GiftSelection | null>(null);
   const [status, setStatus] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
     const updateSelection = () => void loadRemoteSelection().then(setSelection);
@@ -153,6 +156,32 @@ export default function AdminPage() {
     } catch {
       setStatus("Không thể lưu ảnh. Hãy xóa một ảnh rồi thử lại.");
     }
+  }
+
+  async function updatePassword() {
+    if (newPassword !== confirmPassword) {
+      setStatus("Mật khẩu xác nhận chưa khớp");
+      return;
+    }
+    const response = await fetch("/api/admin/password", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    const payload = (await response.json()) as { error?: string };
+    if (!response.ok) {
+      setStatus(payload.error || "Không thể đổi mật khẩu");
+      return;
+    }
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setStatus("Đã đổi mật khẩu thành công");
+  }
+
+  async function logout() {
+    await fetch("/api/admin/logout", { method: "POST" });
+    window.location.href = "/admin/login";
   }
 
   function resetAll() {
@@ -353,6 +382,31 @@ export default function AdminPage() {
           ) : (
             <div className="no-selection">Chưa có lựa chọn nào được gửi.</div>
           )}
+        </section>
+
+        <section className="admin-panel security-panel">
+          <div className="panel-heading">
+            <span>06</span>
+            <div><h2>Bảo mật trang quản lý</h2><p>Đổi mật khẩu riêng hoặc đăng xuất khỏi thiết bị này.</p></div>
+          </div>
+          <div className="password-grid">
+            <label className="admin-field">
+              <span>Mật khẩu hiện tại</span>
+              <input type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} />
+            </label>
+            <label className="admin-field">
+              <span>Mật khẩu mới</span>
+              <input type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} />
+            </label>
+            <label className="admin-field">
+              <span>Nhập lại mật khẩu mới</span>
+              <input type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} />
+            </label>
+          </div>
+          <div className="security-actions">
+            <button type="button" onClick={updatePassword}>Đổi mật khẩu</button>
+            <button type="button" className="logout-button" onClick={logout}>Đăng xuất</button>
+          </div>
         </section>
       </div>
 

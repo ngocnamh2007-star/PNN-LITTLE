@@ -159,6 +159,24 @@ button { color: inherit; }
 .selection-result p { margin: 0; color: #9b8fa0; font-size: 11px; }
 .selection-result button { padding: 9px 12px; border: 1px solid #ffffff24; border-radius: 9px; color: white; background: #ffffff0c; cursor: pointer; }
 .no-selection { padding: 24px; border: 1px dashed #ffffff20; border-radius: 14px; color: #978b9b; text-align: center; font-size: 13px; }
+.security-panel { grid-column: 1 / -1; }
+.password-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.password-grid .admin-field { margin-top: 0; }
+.security-actions { display: flex; gap: 10px; margin-top: 16px; }
+.security-actions button { padding: 11px 15px; border: 0; border-radius: 10px; color: white; background: #8d2863; cursor: pointer; font-weight: 700; }
+.security-actions .logout-button { border: 1px solid #ffffff25; color: #cbbdce; background: transparent; }
+.admin-login-page { min-height: 100svh; display: grid; place-items: center; padding: 24px; color: white; background: radial-gradient(circle at 70% 80%, #8e174f, transparent 42%), linear-gradient(145deg, #08050c, #2a103d); }
+.admin-login-card { width: min(420px, 94vw); padding: 38px 32px; border: 1px solid #ffffff30; border-radius: 26px; background: #1a1022c9; box-shadow: 0 28px 80px #0009; backdrop-filter: blur(18px); text-align: center; }
+.login-lock { color: #ff4d9c; font-size: 42px; text-shadow: 0 0 22px #ff2d89; }
+.admin-login-card h1 { margin: 5px 0 8px; font: italic 40px/1.1 Georgia, serif; }
+.admin-login-card > p:not(.eyebrow) { color: #bcaec0; }
+.admin-login-card label { display: block; margin-top: 24px; text-align: left; }
+.admin-login-card label span { display: block; margin-bottom: 7px; color: #cabdcd; font-size: 12px; font-weight: 700; }
+.admin-login-card input { width: 100%; height: 48px; padding: 0 14px; border: 1px solid #ffffff25; border-radius: 12px; outline: 0; color: white; background: #0d0910; }
+.admin-login-card input:focus { border-color: #ef438f; }
+.admin-login-card > button { width: 100%; margin-top: 14px; padding: 14px; border: 0; border-radius: 12px; color: white; background: linear-gradient(90deg, #ec2c83, #9333d8); cursor: pointer; font-weight: 800; }
+.admin-login-card > a { display: inline-block; margin-top: 18px; color: #b9aabd; text-decoration: none; font-size: 12px; }
+.login-error { margin-top: 10px; color: #ff8ca5; font-size: 12px; }
 .admin-actions > div { display: flex; align-items: center; gap: 14px; }
 .reset-button, .save-button { border-radius: 12px; padding: 13px 18px; cursor: pointer; font-size: 12px; font-weight: 800; }
 .reset-button { border: 1px solid #ffffff25; color: #bdaec1; background: transparent; }
@@ -195,7 +213,8 @@ button { color: inherit; }
   .admin-header { align-items: flex-start; flex-direction: column; }
   .admin-grid { grid-template-columns: 1fr; }
   .photos-panel { grid-column: auto; }
-  .gifts-panel, .result-panel { grid-column: auto; }
+  .gifts-panel, .result-panel, .security-panel { grid-column: auto; }
+  .password-grid { grid-template-columns: 1fr; }
   .gift-editor { grid-template-columns: 48px 1fr; }
   .gift-editor > button { grid-column: 2; }
   .selection-result { align-items: flex-start; flex-wrap: wrap; }
