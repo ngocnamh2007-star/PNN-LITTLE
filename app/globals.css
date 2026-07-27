@@ -150,6 +150,20 @@ button { color: inherit; }
 .gift-editor > button:disabled { opacity: .35; cursor: not-allowed; }
 .add-gift-button { margin-top: 12px; padding: 10px 14px; border: 1px dashed #ffffff38; border-radius: 10px; color: #decde2; background: transparent; cursor: pointer; }
 .result-panel { grid-column: 1 / -1; }
+.music-panel { grid-column: 1 / -1; }
+.music-current { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 15px; padding: 16px; border: 1px solid #ff65b033; border-radius: 16px; background: linear-gradient(135deg, #ff3f9212, #8738d817); }
+.music-icon { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; color: #ffd0e7; background: #db328141; box-shadow: 0 0 24px #f13b9440; font-size: 27px; }
+.music-info { min-width: 0; display: grid; gap: 5px; }
+.music-info small { color: #ff8fc4; font-size: 9px; font-weight: 900; letter-spacing: .16em; }
+.music-info strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.music-info audio { width: min(520px, 100%); height: 36px; margin-top: 5px; }
+.music-current > button { padding: 9px 12px; border: 1px solid #ff557044; border-radius: 9px; color: #ff8ba0; background: #ff294217; cursor: pointer; }
+.music-empty { padding: 18px; border: 1px dashed #ffffff22; border-radius: 14px; color: #a99bad; text-align: center; font-size: 13px; }
+.music-upload { position: relative; display: grid; gap: 4px; margin-top: 12px; padding: 15px; border: 1px dashed #ffffff36; border-radius: 14px; color: #eadcea; background: #ffffff08; cursor: pointer; text-align: center; }
+.music-upload strong { color: #ff9dca; font-size: 13px; }
+.music-upload span { color: #998b9c; font-size: 11px; }
+.music-upload input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.music-upload.is-uploading { opacity: .6; cursor: wait; }
 .selection-result { display: flex; align-items: center; gap: 16px; padding: 17px; border: 1px solid #58d7a932; border-radius: 16px; background: #2a9a7314; }
 .selection-result > span { font-size: 44px; }
 .selection-result > div { flex: 1; display: grid; gap: 3px; }
@@ -212,7 +226,9 @@ button { color: inherit; }
   .admin-header { align-items: flex-start; flex-direction: column; }
   .admin-grid { grid-template-columns: 1fr; }
   .photos-panel { grid-column: auto; }
-  .gifts-panel, .result-panel, .security-panel { grid-column: auto; }
+  .gifts-panel, .music-panel, .result-panel, .security-panel { grid-column: auto; }
+  .music-current { grid-template-columns: auto 1fr; }
+  .music-current > button { grid-column: 2; justify-self: start; }
   .password-grid { grid-template-columns: 1fr; }
   .gift-editor { grid-template-columns: 48px 1fr; }
   .gift-editor > button { grid-column: 2; }

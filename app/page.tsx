@@ -41,6 +41,7 @@ export default function Home() {
   const [muted, setMuted] = useState(false);
   const [rotation, setRotation] = useState({ x: -4, y: 0 });
   const [dragging, setDragging] = useState(false);
+  const audio = useRef<HTMLAudioElement | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const endingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dragPoint = useRef({ x: 0, y: 0 });
@@ -110,9 +111,27 @@ export default function Home() {
   );
 
   function begin() {
-    if (!muted) playChime();
+    if (!muted) {
+      if (config.music?.url && audio.current) {
+        audio.current.currentTime = 0;
+        void audio.current.play().catch(() => playChime());
+      } else {
+        playChime();
+      }
+    }
     setPhase("loading");
     timer.current = setTimeout(() => setPhase("show"), 2100);
+  }
+
+  function toggleSound() {
+    setMuted((current) => {
+      const next = !current;
+      if (audio.current) {
+        audio.current.muted = next;
+        if (!next && config.music?.url) void audio.current.play().catch(() => undefined);
+      }
+      return next;
+    });
   }
 
   function startDrag(event: PointerEvent<HTMLElement>) {
@@ -140,6 +159,16 @@ export default function Home() {
 
   return (
     <main className={`experience phase-${phase}`}>
+      {config.music?.url && (
+        <audio
+          ref={audio}
+          src={config.music.url}
+          loop
+          preload="metadata"
+          muted={muted}
+          aria-hidden="true"
+        />
+      )}
       {phase === "intro" && (
         <section className="intro">
           <div className="aurora" />
@@ -147,7 +176,7 @@ export default function Home() {
             className="sound"
             type="button"
             aria-label={muted ? "Bật âm thanh" : "Tắt âm thanh"}
-            onClick={() => setMuted((value) => !value)}
+            onClick={toggleSound}
           >
             {muted ? "♩" : "♪"}
           </button>

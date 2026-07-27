@@ -10,6 +10,7 @@ import {
   loadRemoteConfig,
   loadRemoteSelection,
   LoveConfig,
+  saveConfig,
   saveRemoteConfig,
 } from "../site-config";
 
@@ -28,13 +29,14 @@ function compressPhoto(source: File | string): Promise<string> {
         reject(new Error("Canvas unavailable"));
         return;
       }
+      const drawingContext = context;
 
       function render(quality: number) {
         canvas.width = width;
         canvas.height = height;
-        context.fillStyle = "#ffffff";
-        context.fillRect(0, 0, width, height);
-        context.drawImage(image, 0, 0, width, height);
+        drawingContext.fillStyle = "#ffffff";
+        drawingContext.fillRect(0, 0, width, height);
+        drawingContext.drawImage(image, 0, 0, width, height);
         return canvas.toDataURL("image/jpeg", quality);
       }
 
@@ -64,6 +66,7 @@ export default function AdminPage() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [uploadingMusic, setUploadingMusic] = useState(false);
 
   useEffect(() => {
     const updateSelection = () => void loadRemoteSelection().then(setSelection);
@@ -144,6 +147,57 @@ export default function AdminPage() {
       event.target.value = "";
     } catch {
       setStatus("Có ảnh không đọc được. Bạn hãy thử chọn ảnh khác.");
+    }
+  }
+
+  async function pickMusic(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("audio/")) {
+      setStatus("Tệp đã chọn không phải là âm thanh.");
+      event.target.value = "";
+      return;
+    }
+    if (file.size > 25 * 1024 * 1024) {
+      setStatus("Tệp nhạc cần nhỏ hơn 25 MB.");
+      event.target.value = "";
+      return;
+    }
+
+    setUploadingMusic(true);
+    setStatus("Đang tải nhạc lên...");
+    try {
+      const form = new FormData();
+      form.append("music", file);
+      const response = await fetch("/api/music", { method: "POST", body: form });
+      const payload = (await response.json()) as {
+        music?: LoveConfig["music"];
+        error?: string;
+      };
+      if (!response.ok || !payload.music) throw new Error(payload.error || "Upload failed");
+      const nextConfig = { ...config, music: payload.music };
+      await saveRemoteConfig(nextConfig);
+      setConfig(nextConfig);
+      setStatus(`Đã tải và lưu bài “${file.name}”`);
+    } catch {
+      setStatus("Không thể tải nhạc lên. Bạn hãy thử tệp khác.");
+    } finally {
+      setUploadingMusic(false);
+      event.target.value = "";
+    }
+  }
+
+  async function removeMusic() {
+    setStatus("Đang xóa nhạc...");
+    try {
+      const response = await fetch("/api/music", { method: "DELETE" });
+      if (!response.ok) throw new Error("Delete failed");
+      const nextConfig = { ...config, music: null };
+      await saveRemoteConfig(nextConfig);
+      setConfig(nextConfig);
+      setStatus("Đã xóa nhạc nền");
+    } catch {
+      setStatus("Chưa thể xóa nhạc.");
     }
   }
 
@@ -366,9 +420,39 @@ export default function AdminPage() {
           <button className="add-gift-button" type="button" onClick={addGift}>＋ Thêm phần quà</button>
         </section>
 
-        <section className="admin-panel result-panel">
+        <section className="admin-panel music-panel">
           <div className="panel-heading">
             <span>05</span>
+            <div><h2>Nhạc nền</h2><p>Tải MP3, M4A, WAV, OGG hoặc tệp âm thanh khác, tối đa 25 MB.</p></div>
+          </div>
+          {config.music ? (
+            <div className="music-current">
+              <div className="music-icon">♫</div>
+              <div className="music-info">
+                <small>ĐANG SỬ DỤNG</small>
+                <strong>{config.music.name}</strong>
+                <audio src={config.music.url} controls preload="metadata" />
+              </div>
+              <button type="button" onClick={removeMusic}>Xóa nhạc</button>
+            </div>
+          ) : (
+            <div className="music-empty">Chưa có nhạc nền. Người nhận sẽ nghe tiếng chuông mặc định.</div>
+          )}
+          <label className={`music-upload ${uploadingMusic ? "is-uploading" : ""}`}>
+            <strong>{uploadingMusic ? "Đang tải lên..." : config.music ? "Thay bài nhạc khác" : "＋ Tải nhạc lên"}</strong>
+            <span>Nhạc sẽ bắt đầu sau khi người nhận bấm “Mở món quà”.</span>
+            <input
+              type="file"
+              accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.oga,.webm,.flac"
+              disabled={uploadingMusic}
+              onChange={pickMusic}
+            />
+          </label>
+        </section>
+
+        <section className="admin-panel result-panel">
+          <div className="panel-heading">
+            <span>06</span>
             <div><h2>Kết quả lựa chọn</h2><p>Xem món quà mà người nhận đã chọn.</p></div>
           </div>
           {selection ? (
@@ -388,7 +472,7 @@ export default function AdminPage() {
 
         <section className="admin-panel security-panel">
           <div className="panel-heading">
-            <span>06</span>
+            <span>07</span>
             <div><h2>Bảo mật trang quản lý</h2><p>Đổi mật khẩu riêng hoặc đăng xuất khỏi thiết bị này.</p></div>
           </div>
           <div className="password-grid">

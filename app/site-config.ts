@@ -20,6 +20,13 @@ export type LoveConfig = {
   floatingLines: string[];
   photos: string[];
   gifts: GiftOption[];
+  music: MusicTrack | null;
+};
+
+export type MusicTrack = {
+  name: string;
+  url: string;
+  type: string;
 };
 
 export type GiftOption = {
@@ -49,6 +56,7 @@ export const defaultConfig: LoveConfig = {
     "CẢM ƠN EM ĐÃ ĐẾN",
   ],
   photos: [],
+  music: null,
   gifts: [
     { id: "gift-date", emoji: "🌹", title: "Một buổi hẹn", description: "Một ngày chỉ dành riêng cho hai chúng ta." },
     { id: "gift-surprise", emoji: "🎁", title: "Quà bí mật", description: "Một món quà bất ngờ do mình chuẩn bị." },
@@ -68,6 +76,7 @@ export function loadConfig(): LoveConfig {
         : defaultConfig.floatingLines,
       photos: Array.isArray(saved.photos) ? saved.photos : [],
       gifts: Array.isArray(saved.gifts) ? saved.gifts : defaultConfig.gifts,
+      music: saved.music?.url ? saved.music : null,
     };
   } catch {
     return defaultConfig;
