@@ -1,10 +1,15 @@
 "use client";
 
-import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
-
-const defaults = ["TE AMO MUCHO", "I LOVE YOU", "YÊU EM RẤT NHIỀU", "LOVE YOU"];
-
-type Memory = { src: string; id: number };
+import Link from "next/link";
+import { PointerEvent, useEffect, useMemo, useRef, useState } from "react";
+import {
+  defaultConfig,
+  GiftSelection,
+  loadConfig,
+  loadSelection,
+  LoveConfig,
+  saveSelection,
+} from "./site-config";
 
 function playChime() {
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -31,29 +36,79 @@ declare global {
 }
 
 export default function Home() {
-  const [name, setName] = useState("Người mình thương");
-  const [message, setMessage] = useState("TE AMO MUCHO");
-  const [memories, setMemories] = useState<Memory[]>([]);
-  const [phase, setPhase] = useState<"intro" | "loading" | "show">("intro");
+  const [config, setConfig] = useState<LoveConfig>(defaultConfig);
+  const [phase, setPhase] = useState<"intro" | "loading" | "show" | "gift">("intro");
+  const [selection, setSelection] = useState<GiftSelection | null>(null);
   const [muted, setMuted] = useState(false);
+  const [rotation, setRotation] = useState({ x: -4, y: 0 });
+  const [dragging, setDragging] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const endingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dragPoint = useRef({ x: 0, y: 0 });
 
-  const words = useMemo(
+  useEffect(() => {
+    const update = () => setConfig(loadConfig());
+    const updateSelection = () => setSelection(loadSelection());
+    update();
+    updateSelection();
+    window.addEventListener("storage", update);
+    window.addEventListener("storage", updateSelection);
+    window.addEventListener("love-config-updated", update);
+    window.addEventListener("love-selection-updated", updateSelection);
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+      if (endingTimer.current) clearTimeout(endingTimer.current);
+      window.removeEventListener("storage", update);
+      window.removeEventListener("storage", updateSelection);
+      window.removeEventListener("love-config-updated", update);
+      window.removeEventListener("love-selection-updated", updateSelection);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (phase !== "show") return;
+    endingTimer.current = setTimeout(
+      () => setPhase("gift"),
+      Math.max(5, config.durationSeconds) * 1000,
+    );
+    return () => {
+      if (endingTimer.current) clearTimeout(endingTimer.current);
+    };
+  }, [phase, config.durationSeconds]);
+
+  const words = useMemo(() => {
+    const lines = config.floatingLines.length
+      ? config.floatingLines
+      : [config.mainMessage];
+    return Array.from({ length: 128 }, (_, i) => ({
+      id: i,
+      text: i % 7 === 0 ? "♥" : lines[i % lines.length],
+      left: -8 + ((i * 37 + 7) % 112),
+      size: 11 + ((i * 17) % 48),
+      delay: -((i * 0.79) % 15),
+      duration: 8 + ((i * 0.43) % 9),
+      rotate: -12 + ((i * 13) % 25),
+      depth: -760 + ((i * 137) % 1240),
+      drift: -90 + ((i * 83) % 180),
+      tone: i % 6,
+    }));
+  }, [config]);
+
+  const photoStream = useMemo(
     () =>
-      Array.from({ length: 44 }, (_, i) => ({
-        id: i,
-        text: i % 5 === 0 ? "♥" : i % 4 === 0 ? defaults[(i / 4) % defaults.length] : message,
-        left: (i * 37 + 7) % 92,
-        top: (i * 53 + 3) % 96,
-        size: 14 + ((i * 11) % 29),
-        delay: -((i * 0.37) % 7),
-        duration: 6 + ((i * 0.47) % 5),
-        rotate: -18 + ((i * 13) % 37),
-      })),
-    [message],
+      config.photos.length
+        ? Array.from({ length: Math.max(10, config.photos.length * 2) }, (_, index) => ({
+            src: config.photos[index % config.photos.length],
+            id: index,
+            left: 4 + ((index * 31) % 84),
+            delay: -((index * 2.17) % 18),
+            duration: 13 + ((index * 1.3) % 7),
+            depth: -520 + ((index * 229) % 940),
+            tilt: -13 + ((index * 19) % 27),
+          }))
+        : [],
+    [config.photos],
   );
-
-  useEffect(() => () => timer.current && clearTimeout(timer.current), []);
 
   function begin() {
     if (!muted) playChime();
@@ -61,18 +116,27 @@ export default function Home() {
     timer.current = setTimeout(() => setPhase("show"), 2100);
   }
 
-  function pickPhotos(event: ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(event.target.files ?? []).slice(0, 6);
-    Promise.all(
-      files.map(
-        (file, id) =>
-          new Promise<Memory>((resolve) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve({ src: String(reader.result), id });
-            reader.readAsDataURL(file);
-          }),
-      ),
-    ).then(setMemories);
+  function startDrag(event: PointerEvent<HTMLElement>) {
+    event.currentTarget.setPointerCapture(event.pointerId);
+    dragPoint.current = { x: event.clientX, y: event.clientY };
+    setDragging(true);
+  }
+
+  function moveScene(event: PointerEvent<HTMLElement>) {
+    if (!dragging) return;
+    const deltaX = event.clientX - dragPoint.current.x;
+    const deltaY = event.clientY - dragPoint.current.y;
+    dragPoint.current = { x: event.clientX, y: event.clientY };
+    setRotation((current) => ({
+      x: Math.max(-24, Math.min(24, current.x - deltaY * 0.12)),
+      y: current.y + deltaX * 0.16,
+    }));
+  }
+
+  function chooseGift(giftId: string) {
+    const nextSelection = { giftId, selectedAt: new Date().toISOString() };
+    saveSelection(nextSelection);
+    setSelection(nextSelection);
   }
 
   return (
@@ -88,35 +152,17 @@ export default function Home() {
           >
             {muted ? "♩" : "♪"}
           </button>
-          <div className="intro-card">
+          <div className="intro-card viewer-card">
             <p className="eyebrow">A LITTLE SURPRISE FOR</p>
-            <input
-              aria-label="Tên người nhận"
-              value={name}
-              maxLength={28}
-              onChange={(event) => setName(event.target.value)}
-            />
+            <h1>{config.recipient}</h1>
             <div className="tiny-heart">♥</div>
-            <label className="field-label" htmlFor="message">
-              Lời muốn nói
-            </label>
-            <input
-              id="message"
-              className="message-input"
-              value={message}
-              maxLength={32}
-              onChange={(event) => setMessage(event.target.value.toUpperCase())}
-            />
-            <label className="upload">
-              <span>{memories.length ? `Đã chọn ${memories.length} ảnh` : "Chọn ảnh kỷ niệm"}</span>
-              <input type="file" accept="image/*" multiple onChange={pickPhotos} />
-            </label>
+            <p className="gift-preview">{config.mainMessage}</p>
             <button className="open-button" type="button" onClick={begin}>
-              MỞ MÓN QUÀ
-              <span>→</span>
+              MỞ MÓN QUÀ <span>→</span>
             </button>
             <p className="hint">Chạm để bắt đầu điều bất ngờ</p>
           </div>
+          <Link className="admin-link" href="/admin">Quản lý nội dung</Link>
         </section>
       )}
 
@@ -133,48 +179,103 @@ export default function Home() {
       )}
 
       {phase === "show" && (
-        <section className="love-world">
+        <section
+          className={`love-world ${dragging ? "is-dragging" : ""}`}
+          onPointerDown={startDrag}
+          onPointerMove={moveScene}
+          onPointerUp={() => setDragging(false)}
+          onPointerCancel={() => setDragging(false)}
+        >
           <div className="vignette" />
-          <div className="stars" />
-          <div className="word-cloud" aria-hidden="true">
-            {words.map((word) => (
-              <span
-                key={word.id}
-                className={word.text === "♥" ? "floating-heart" : "floating-word"}
+          <div className="stars stars-far" />
+          <div className="stars stars-near" />
+          <div
+            className="scene-3d"
+            style={{ transform: `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)` }}
+          >
+            <div className="tunnel-glow" />
+            <div className={`word-cloud font-${config.fontStyle}`} aria-hidden="true">
+              {words.map((word) => (
+                <span
+                  key={word.id}
+                  className={`${word.text === "♥" ? "floating-heart" : "floating-word"} tone-${word.tone}`}
+                  style={{
+                    left: `${word.left}%`,
+                    fontSize: `${word.size}px`,
+                    animationDelay: `${word.delay}s`,
+                    animationDuration: `${word.duration}s`,
+                    "--word-rotate": `${word.rotate}deg`,
+                    "--word-depth": `${word.depth}px`,
+                    "--word-drift": `${word.drift}px`,
+                  } as React.CSSProperties}
+                >
+                  {word.text}
+                </span>
+              ))}
+            </div>
+            {photoStream.map((photo) => (
+              <figure
+                className="memory"
+                key={`${photo.src.slice(-18)}-${photo.id}`}
                 style={{
-                  left: `${word.left}%`,
-                  top: `${word.top}%`,
-                  fontSize: `${word.size}px`,
-                  animationDelay: `${word.delay}s`,
-                  animationDuration: `${word.duration}s`,
-                  transform: `rotate(${word.rotate}deg)`,
-                }}
+                  left: `${photo.left}%`,
+                  animationDelay: `${photo.delay}s`,
+                  animationDuration: `${photo.duration}s`,
+                  "--photo-depth": `${photo.depth}px`,
+                  "--photo-tilt": `${photo.tilt}deg`,
+                } as React.CSSProperties}
               >
-                {word.text}
-              </span>
+                <img src={photo.src} alt="" draggable={false} />
+              </figure>
             ))}
           </div>
-          {memories.map((memory, index) => (
-            <figure
-              className="memory"
-              key={memory.id}
-              style={{
-                left: `${12 + ((index * 29) % 70)}%`,
-                top: `${15 + ((index * 23) % 62)}%`,
-                animationDelay: `${-index * 1.2}s`,
-              }}
-            >
-              <img src={memory.src} alt={`Kỷ niệm ${index + 1}`} />
-            </figure>
-          ))}
-          <div className="center-message">
-            <span>DÀNH CHO</span>
-            <h1>{name || "Người mình thương"}</h1>
-            <p>{message || "TE AMO MUCHO"}</p>
-            {!memories.length && <small>Thêm ảnh ở màn hình đầu để khoảnh khắc này là của riêng bạn</small>}
-          </div>
+          <div className="drag-hint">↔ Kéo hoặc vuốt để khám phá không gian</div>
           <button className="replay" type="button" onClick={() => setPhase("intro")}>
-            ↻ Làm lại
+            ← Thoát về trang mở quà
+          </button>
+        </section>
+      )}
+
+      {phase === "gift" && (
+        <section className="gift-stage">
+          <div className="aurora" />
+          <div className="gift-modal">
+            {!selection ? (
+              <>
+                <p className="eyebrow">MỘT ĐIỀU CUỐI CÙNG</p>
+                <h2>Chọn một món quà nhé</h2>
+                <p className="gift-subtitle">Chỉ được chọn một lần, hãy chọn điều bạn thích nhất.</p>
+                <div className="gift-options">
+                  {config.gifts.map((gift) => (
+                    <button type="button" className="gift-option" key={gift.id} onClick={() => chooseGift(gift.id)}>
+                      <span>{gift.emoji}</span>
+                      <strong>{gift.title}</strong>
+                      <small>{gift.description}</small>
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="chosen-gift">
+                {(() => {
+                  const gift = config.gifts.find((item) => item.id === selection.giftId);
+                  return gift ? (
+                    <>
+                      <p className="eyebrow">BẠN ĐÃ CHỌN</p>
+                      <span className="chosen-emoji">{gift.emoji}</span>
+                      <h2>{gift.title}</h2>
+                      <p>{gift.description}</p>
+                      <small>Lựa chọn đã được gửi đến người tặng quà ♥</small>
+                    </>
+                  ) : (
+                    <p>Món quà đã được ghi nhận.</p>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
+          <button className="gift-exit" type="button" onClick={() => setPhase("intro")}>
+            ← Thoát về trang mở quà
           </button>
         </section>
       )}
