@@ -71,7 +71,9 @@ export default function AdminPage() {
     updateSelection();
     window.addEventListener("storage", updateSelection);
     window.addEventListener("love-selection-updated", updateSelection);
+    const selectionPolling = window.setInterval(updateSelection, 2500);
     return () => {
+      window.clearInterval(selectionPolling);
       window.removeEventListener("storage", updateSelection);
       window.removeEventListener("love-selection-updated", updateSelection);
     };

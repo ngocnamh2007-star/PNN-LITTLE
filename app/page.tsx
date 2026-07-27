@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { PointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   defaultConfig,
@@ -162,7 +161,6 @@ export default function Home() {
             </button>
             <p className="hint">Chạm để bắt đầu điều bất ngờ</p>
           </div>
-          <Link className="admin-link" href="/admin">Quản lý nội dung</Link>
         </section>
       )}
 

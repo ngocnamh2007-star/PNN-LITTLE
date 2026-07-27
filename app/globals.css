@@ -32,7 +32,6 @@ button { color: inherit; }
 .hint { margin: 13px 0 0; color: #af9db8; font-size: 11px; }
 .viewer-card h1 { margin: 5px 0 0; font: italic clamp(34px, 9vw, 50px)/1.05 Georgia, serif; text-shadow: 0 0 26px #ff60b8; }
 .gift-preview { min-height: 48px; margin: 0 0 18px; color: #f4e6f5; letter-spacing: .11em; line-height: 1.5; font-size: 14px; font-weight: 800; }
-.admin-link { position: fixed; left: 18px; bottom: 18px; z-index: 30; color: #d8c9df; text-decoration: none; font-size: 12px; border-bottom: 1px solid #ffffff44; }
 .loading-card { width: min(84vw, 420px); padding: 44px 28px 35px; text-align: center; border: 1px solid #ffffff55; border-radius: 27px; background: #2810368a; box-shadow: 0 20px 70px #0008; backdrop-filter: blur(18px); }
 .loading-heart { font-size: 48px; color: #ff2d78; filter: drop-shadow(0 0 20px #ff2d78); animation: beat .8s infinite; }
 .loading-card strong { display: block; margin: 17px 0 26px; font-size: 17px; }
