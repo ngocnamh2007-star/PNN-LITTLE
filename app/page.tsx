@@ -76,6 +76,13 @@ export default function Home() {
     };
   }, [phase, config.durationSeconds]);
 
+  useEffect(() => {
+    if (phase !== "intro" && phase !== "gift") return;
+    if (!audio.current) return;
+    audio.current.pause();
+    audio.current.currentTime = 0;
+  }, [phase]);
+
   const words = useMemo(() => {
     const lines = config.floatingLines.length
       ? config.floatingLines
