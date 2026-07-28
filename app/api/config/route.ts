@@ -13,7 +13,8 @@ export async function GET() {
     ]);
     return Response.json({
       config: {
-        ...(config ?? defaultConfig),
+        ...defaultConfig,
+        ...(config ?? {}),
         music: music ?? config?.music ?? null,
       },
     });

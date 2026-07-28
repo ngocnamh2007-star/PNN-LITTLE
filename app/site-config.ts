@@ -2,6 +2,8 @@ export type LoveConfig = {
   recipient: string;
   mainMessage: string;
   durationSeconds: number;
+  gyroscopeEnabled: boolean;
+  giftsEnabled: boolean;
   fontStyle:
     | "modern"
     | "handwritten"
@@ -48,6 +50,8 @@ export const defaultConfig: LoveConfig = {
   recipient: "Người mình thương",
   mainMessage: "YÊU EM RẤT NHIỀU",
   durationSeconds: 25,
+  gyroscopeEnabled: true,
+  giftsEnabled: true,
   fontStyle: "handwritten",
   floatingLines: [
     "YÊU EM RẤT NHIỀU",

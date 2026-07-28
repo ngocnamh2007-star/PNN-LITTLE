@@ -337,6 +337,32 @@ export default function AdminPage() {
               <strong>{config.durationSeconds} giây</strong>
             </div>
           </label>
+          <div className="admin-toggle-list">
+            <label className="admin-toggle">
+              <div>
+                <strong>Con quay hồi chuyển trên điện thoại</strong>
+                <small>Nghiêng điện thoại để điều khiển không gian chữ và ảnh.</small>
+              </div>
+              <input
+                type="checkbox"
+                checked={config.gyroscopeEnabled}
+                onChange={(event) => update("gyroscopeEnabled", event.target.checked)}
+              />
+              <span aria-hidden="true" />
+            </label>
+            <label className="admin-toggle">
+              <div>
+                <strong>Hiện phần chọn quà</strong>
+                <small>Tắt để hiệu ứng kết thúc mà không hiện các món quà.</small>
+              </div>
+              <input
+                type="checkbox"
+                checked={config.giftsEnabled}
+                onChange={(event) => update("giftsEnabled", event.target.checked)}
+              />
+              <span aria-hidden="true" />
+            </label>
+          </div>
           <label className="admin-field">
             <span>Lời muốn nói</span>
             <textarea

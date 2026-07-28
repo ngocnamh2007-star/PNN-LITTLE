@@ -40,7 +40,7 @@ declare global {
 
 export default function Home() {
   const [config, setConfig] = useState<LoveConfig>(defaultConfig);
-  const [phase, setPhase] = useState<"intro" | "loading" | "show" | "gift">("intro");
+  const [phase, setPhase] = useState<"intro" | "loading" | "show" | "finished" | "gift">("intro");
   const [selection, setSelection] = useState<GiftSelection | null>(null);
   const [muted, setMuted] = useState(false);
   const [rotation, setRotation] = useState({ x: -4, y: 0 });
@@ -73,23 +73,27 @@ export default function Home() {
   useEffect(() => {
     if (phase !== "show") return;
     endingTimer.current = setTimeout(
-      () => setPhase("gift"),
+      () => setPhase(config.giftsEnabled ? "gift" : "finished"),
       Math.max(5, config.durationSeconds) * 1000,
     );
     return () => {
       if (endingTimer.current) clearTimeout(endingTimer.current);
     };
-  }, [phase, config.durationSeconds]);
+  }, [phase, config.durationSeconds, config.giftsEnabled]);
 
   useEffect(() => {
-    if (phase !== "intro" && phase !== "gift") return;
+    if (!config.gyroscopeEnabled) setGyroEnabled(false);
+  }, [config.gyroscopeEnabled]);
+
+  useEffect(() => {
+    if (phase !== "intro" && phase !== "finished" && phase !== "gift") return;
     if (!audio.current) return;
     audio.current.pause();
     audio.current.currentTime = 0;
   }, [phase]);
 
   useEffect(() => {
-    if (!gyroEnabled) return;
+    if (!gyroEnabled || phase !== "show") return;
     const moveWithPhone = (event: DeviceOrientationEvent) => {
       if (dragging || event.beta === null || event.gamma === null) return;
       const portraitTilt = Math.max(-35, Math.min(35, event.beta - 45));
@@ -101,7 +105,7 @@ export default function Home() {
     };
     window.addEventListener("deviceorientation", moveWithPhone, true);
     return () => window.removeEventListener("deviceorientation", moveWithPhone, true);
-  }, [gyroEnabled, dragging]);
+  }, [gyroEnabled, dragging, phase]);
 
   const words = useMemo(() => {
     const lines = config.floatingLines.length
@@ -138,7 +142,11 @@ export default function Home() {
   );
 
   async function enableGyroscope() {
-    if (!window.matchMedia("(pointer: coarse)").matches || !("DeviceOrientationEvent" in window)) {
+    if (
+      !config.gyroscopeEnabled ||
+      !window.matchMedia("(pointer: coarse)").matches ||
+      !("DeviceOrientationEvent" in window)
+    ) {
       return;
     }
     try {
@@ -252,9 +260,9 @@ export default function Home() {
         </section>
       )}
 
-      {phase === "show" && (
+      {(phase === "show" || phase === "finished") && (
         <section
-          className={`love-world ${dragging ? "is-dragging" : ""}`}
+          className={`love-world ${phase === "finished" ? "is-finished" : ""} ${dragging ? "is-dragging" : ""}`}
           onPointerDown={startDrag}
           onPointerMove={moveScene}
           onPointerUp={() => setDragging(false)}
@@ -311,6 +319,12 @@ export default function Home() {
           <button className="replay" type="button" onClick={() => setPhase("intro")}>
             ← Thoát về trang mở quà
           </button>
+          {phase === "finished" && (
+            <div className="experience-finished" aria-live="polite">
+              <span>♥</span>
+              <strong>Điều bất ngờ đã kết thúc</strong>
+            </div>
+          )}
         </section>
       )}
 
