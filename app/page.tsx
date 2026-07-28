@@ -32,6 +32,10 @@ declare global {
   interface Window {
     webkitAudioContext?: typeof AudioContext;
   }
+
+  interface DeviceOrientationEvent {
+    requestPermission?: () => Promise<"granted" | "denied">;
+  }
 }
 
 export default function Home() {
@@ -41,6 +45,7 @@ export default function Home() {
   const [muted, setMuted] = useState(false);
   const [rotation, setRotation] = useState({ x: -4, y: 0 });
   const [dragging, setDragging] = useState(false);
+  const [gyroEnabled, setGyroEnabled] = useState(false);
   const audio = useRef<HTMLAudioElement | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const endingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -83,6 +88,21 @@ export default function Home() {
     audio.current.currentTime = 0;
   }, [phase]);
 
+  useEffect(() => {
+    if (!gyroEnabled) return;
+    const moveWithPhone = (event: DeviceOrientationEvent) => {
+      if (dragging || event.beta === null || event.gamma === null) return;
+      const portraitTilt = Math.max(-35, Math.min(35, event.beta - 45));
+      const sideTilt = Math.max(-45, Math.min(45, event.gamma));
+      setRotation({
+        x: Math.max(-18, Math.min(18, -portraitTilt * 0.32)),
+        y: sideTilt * 0.42,
+      });
+    };
+    window.addEventListener("deviceorientation", moveWithPhone, true);
+    return () => window.removeEventListener("deviceorientation", moveWithPhone, true);
+  }, [gyroEnabled, dragging]);
+
   const words = useMemo(() => {
     const lines = config.floatingLines.length
       ? config.floatingLines
@@ -117,7 +137,27 @@ export default function Home() {
     [config.photos],
   );
 
+  async function enableGyroscope() {
+    if (!window.matchMedia("(pointer: coarse)").matches || !("DeviceOrientationEvent" in window)) {
+      return;
+    }
+    try {
+      const orientationEvent = DeviceOrientationEvent as typeof DeviceOrientationEvent & {
+        requestPermission?: () => Promise<"granted" | "denied">;
+      };
+      if (typeof orientationEvent.requestPermission === "function") {
+        const permission = await orientationEvent.requestPermission();
+        setGyroEnabled(permission === "granted");
+      } else {
+        setGyroEnabled(true);
+      }
+    } catch {
+      setGyroEnabled(false);
+    }
+  }
+
   function begin() {
+    void enableGyroscope();
     if (!muted) {
       if (config.music?.url && audio.current) {
         audio.current.currentTime = 0;
@@ -263,7 +303,11 @@ export default function Home() {
               </figure>
             ))}
           </div>
-          <div className="drag-hint">↔ Kéo hoặc vuốt để khám phá không gian</div>
+          <div className="drag-hint">
+            {gyroEnabled
+              ? "↔ Nghiêng điện thoại để khám phá không gian"
+              : "↔ Kéo hoặc vuốt để khám phá không gian"}
+          </div>
           <button className="replay" type="button" onClick={() => setPhase("intro")}>
             ← Thoát về trang mở quà
           </button>
