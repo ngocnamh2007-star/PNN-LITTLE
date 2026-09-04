@@ -72,6 +72,7 @@ export default function Home() {
 
   useEffect(() => {
     if (phase !== "show") return;
+    if (config.durationSeconds <= 0) return;
     endingTimer.current = setTimeout(
       () => setPhase(config.giftsEnabled ? "gift" : "finished"),
       Math.max(5, config.durationSeconds) * 1000,

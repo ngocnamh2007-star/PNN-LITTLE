@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { readState, writeState } from "./api/state-store";
+import { deleteState, readState, writeState } from "./api/state-store";
 
 const PASSWORD_KEY = "admin-password-hash";
 const ACCOUNT_KEY = "admin-accounts";
@@ -53,6 +53,15 @@ export async function createAdminAccount(username: string, password: string) {
   const passwordHash = await hashPassword(password);
   accounts[cleanUsername.toLowerCase()] = { username: cleanUsername, passwordHash };
   await writeState(ACCOUNT_KEY, accounts);
+}
+
+export async function deleteAdminAccount(username: string) {
+  const accounts = (await readState<Record<string, { username: string; passwordHash: string }>>(ACCOUNT_KEY)) ?? {};
+  delete accounts[username.trim().toLowerCase()];
+  await writeState(ACCOUNT_KEY, accounts);
+  await deleteState(`love-config:${encodeURIComponent(username)}`);
+  await deleteState(`love-music:${encodeURIComponent(username)}`);
+  await deleteState(`gift-selection:${encodeURIComponent(username)}`);
 }
 
 export async function changePassword(password: string) {

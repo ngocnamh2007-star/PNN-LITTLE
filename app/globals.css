@@ -205,6 +205,7 @@ button { color: inherit; }
 .security-actions { display: flex; gap: 10px; margin-top: 16px; }
 .security-actions button { padding: 11px 15px; border: 0; border-radius: 10px; color: white; background: #8d2863; cursor: pointer; font-weight: 700; }
 .security-actions .logout-button { border: 1px solid #ffffff25; color: #cbbdce; background: transparent; }
+.security-actions .delete-account-button { border: 1px solid #ef557055; color: #ff9dab; background: transparent; }
 .admin-login-page { min-height: 100svh; display: grid; place-items: center; padding: 24px; color: white; background: radial-gradient(circle at 70% 80%, #8e174f, transparent 42%), linear-gradient(145deg, #08050c, #2a103d); }
 .admin-login-card { width: min(420px, 94vw); padding: 38px 32px; border: 1px solid #ffffff30; border-radius: 26px; background: #1a1022c9; box-shadow: 0 28px 80px #0009; backdrop-filter: blur(18px); text-align: center; }
 .login-lock { color: #ff4d9c; font-size: 42px; text-shadow: 0 0 22px #ff2d89; }

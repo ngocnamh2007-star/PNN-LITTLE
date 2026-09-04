@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { ChangeEvent, useEffect, useState } from "react";
 import {
   defaultConfig,
@@ -68,6 +67,7 @@ export default function AdminPage() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPasswords, setShowPasswords] = useState(false);
   const [uploadingMusic, setUploadingMusic] = useState(false);
   const [musicProgress, setMusicProgress] = useState(0);
   const [selectedMusic, setSelectedMusic] = useState<File | null>(null);
@@ -311,7 +311,6 @@ export default function AdminPage() {
           <p>Chỉnh nội dung một lần, trang người xem sẽ sử dụng đúng nội dung bạn đã lưu.</p>
           {accountName && <p className="signed-in-as">Đang đăng nhập: <strong>{accountName}</strong></p>}
         </div>
-        <Link href="/" className="preview-link">Xem trang món quà →</Link>
       </header>
 
       <div className="admin-grid">
@@ -342,6 +341,7 @@ export default function AdminPage() {
               <strong>{config.durationSeconds} giây</strong>
             </div>
           </label>
+          <label className="admin-toggle duration-unlimited"><div><strong>Không giới hạn thời lượng</strong><small>Hiệu ứng chạy liên tục, tự ẩn phần quà và nhạc sẽ lặp lại.</small></div><input type="checkbox" checked={config.durationSeconds <= 0} onChange={(event) => update("durationSeconds", event.target.checked ? 0 : 25)} /><span aria-hidden="true" /></label>
           <div className="admin-toggle-list">
             <label className="admin-toggle">
               <div>
@@ -585,20 +585,21 @@ export default function AdminPage() {
           <div className="password-grid">
             <label className="admin-field">
               <span>Mật khẩu hiện tại</span>
-              <input type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} />
+              <div className="password-input-wrap"><input type={showPasswords ? "text" : "password"} value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} /><button type="button" onClick={() => setShowPasswords((value) => !value)} aria-label="Hiện hoặc ẩn mật khẩu">👁</button></div>
             </label>
             <label className="admin-field">
               <span>Mật khẩu mới</span>
-              <input type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} />
+              <div className="password-input-wrap"><input type={showPasswords ? "text" : "password"} value={newPassword} onChange={(event) => setNewPassword(event.target.value)} /><button type="button" onClick={() => setShowPasswords((value) => !value)} aria-label="Hiện hoặc ẩn mật khẩu">👁</button></div>
             </label>
             <label className="admin-field">
               <span>Nhập lại mật khẩu mới</span>
-              <input type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} />
+              <div className="password-input-wrap"><input type={showPasswords ? "text" : "password"} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} /><button type="button" onClick={() => setShowPasswords((value) => !value)} aria-label="Hiện hoặc ẩn mật khẩu">👁</button></div>
             </label>
           </div>
           <div className="security-actions">
             <button type="button" onClick={updatePassword}>Đổi mật khẩu</button>
             <button type="button" className="logout-button" onClick={logout}>Đăng xuất</button>
+            <button type="button" className="delete-account-button" onClick={async () => { if (!window.confirm("Xóa tài khoản và toàn bộ dữ liệu của tài khoản này?")) return; const response = await fetch("/api/admin/account", { method: "DELETE" }); if (response.ok) window.location.href = "/admin/login"; else setStatus("Không thể xóa tài khoản"); }}>Xóa tài khoản</button>
           </div>
         </section>
       </div>
