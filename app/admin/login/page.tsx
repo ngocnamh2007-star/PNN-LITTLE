@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 export default function AdminLoginPage() {
   const [mode, setMode] = useState<"login" | "signup">("login");
@@ -9,6 +9,8 @@ export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [info, setInfo] = useState<{ intro: string; contact: string; address: string; phone: string; facebook: string; twitter: string }>({ intro: "", contact: "", address: "", phone: "", facebook: "", twitter: "" });
+  useEffect(() => { void fetch("/api/site-info").then((r) => r.json()).then((data) => setInfo(data.info)); }, []);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -28,7 +30,7 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <main className="admin-login-page">
+    <main className="admin-login-page"><div>
       <form className="admin-login-card" onSubmit={submit}>
         <div className="login-lock">♥</div>
         <p className="eyebrow">PNN LITTLE</p>
@@ -42,7 +44,7 @@ export default function AdminLoginPage() {
         {error && <div className="login-error">{error}</div>}
         <button type="submit" disabled={loading}>{loading ? "Đang xử lý..." : mode === "signup" ? "Tạo tài khoản" : "Đăng nhập"}</button>
         <button type="button" className="login-switch" onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(""); }}>{mode === "login" ? "Tạo tài khoản mới" : "Đã có tài khoản? Đăng nhập"}</button>
-      </form>
+      </form><footer className="login-footer"><strong>PNN-LITTLE</strong><span>{info.intro}</span><span>☎ {info.phone || info.contact}</span><span>Facebook: {info.facebook || "Đang cập nhật"}</span></footer></div>
     </main>
   );
 }

@@ -220,6 +220,8 @@ button { color: inherit; }
 .password-input-wrap button { position: absolute; right: 8px; border: 0; color: #d8bfd7; background: transparent; cursor: pointer; font-size: 20px; }
 .admin-login-card > button { width: 100%; margin-top: 14px; padding: 14px; border: 0; border-radius: 12px; color: white; background: linear-gradient(90deg, #ec2c83, #9333d8); cursor: pointer; font-weight: 800; }
 .admin-login-card > a { display: inline-block; margin-top: 18px; color: #b9aabd; text-decoration: none; font-size: 12px; }
+.login-footer { width: min(760px, 94vw); margin: 18px auto 0; padding: 16px 20px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px; color: #bbaabd; font-size: 11px; text-align: center; }
+.login-footer strong { color: #f08abb; letter-spacing: .16em; }
 .login-switch { margin-top: 12px; border: 0; color: #e9a5cd; background: transparent; cursor: pointer; font-size: 12px; }
 .share-link { width: 100%; display: flex; gap: 8px; margin-top: 12px; }
 .share-link input { min-width: 0; flex: 1; height: 42px; padding: 0 12px; color: #d9c8dc; border: 1px solid #ffffff20; border-radius: 10px; background: #0d0a10; }
