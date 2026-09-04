@@ -1,0 +1,10 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "pnn-little",
+  "main": "dist/server/index.js",
+  "compatibility_date": "2026-05-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": { "directory": "dist/client" },
+  "d1_databases": [{ "binding": "DB", "database_name": "pnn-little-db", "database_id": "079667c1-3ced-4bd9-8b8b-18c892e5465e" }],
+  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "site-creator-r2" }]
+}
