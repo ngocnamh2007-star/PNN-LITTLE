@@ -64,6 +64,7 @@ export default function AdminPage() {
   const [selection, setSelection] = useState<GiftSelection | null>(null);
   const [status, setStatus] = useState("");
   const [shareLink, setShareLink] = useState("");
+  const [accountName, setAccountName] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -78,6 +79,7 @@ export default function AdminPage() {
       if (document.visibilityState === "visible") updateSelection();
     };
     void loadRemoteConfig().then(setConfig);
+    void fetch("/api/admin/me").then((response) => response.ok ? response.json() : null).then((data: { username?: string } | null) => setAccountName(data?.username || ""));
     updateSelection();
     window.addEventListener("storage", updateSelection);
     window.addEventListener("love-selection-updated", updateSelection);
@@ -261,7 +263,7 @@ export default function AdminPage() {
       const optimizedConfig = { ...config, photos: optimizedPhotos };
       await saveRemoteConfig(optimizedConfig);
       setConfig(optimizedConfig);
-      setShareLink(`${window.location.origin}/`);
+      setShareLink(`${window.location.origin}/?account=${encodeURIComponent(accountName)}`);
       setStatus("Đã lưu nội dung thành công — link đã sẵn sàng để gửi");
     } catch {
       setStatus("Không thể lưu ảnh. Hãy xóa một ảnh rồi thử lại.");

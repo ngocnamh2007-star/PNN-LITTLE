@@ -1,11 +1,11 @@
-import { createAdminSession, SESSION_COOKIE, verifyAdminCredentials } from "../../../admin-auth";
+import { createAdminSessionFor, SESSION_COOKIE, verifyAdminCredentials } from "../../../admin-auth";
 
 export async function POST(request: Request) {
   const payload = (await request.json()) as { username?: string; password?: string };
   if (!payload.password || !(await verifyAdminCredentials(payload.username || "admin", payload.password))) {
     return Response.json({ error: "Mật khẩu không đúng" }, { status: 401 });
   }
-  const token = await createAdminSession();
+  const token = await createAdminSessionFor(payload.username || "admin");
   return new Response(JSON.stringify({ ok: true }), {
     headers: {
       "content-type": "application/json",

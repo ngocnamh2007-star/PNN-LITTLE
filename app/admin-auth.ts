@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { readState, writeState } from "./api/state-store";
 
 const PASSWORD_KEY = "admin-password-hash";
-const ACCOUNT_KEY = "admin-account";
+const ACCOUNT_KEY = "admin-accounts";
 const SESSION_PREFIX = "admin-session:";
 export const SESSION_COOKIE = "pnn_admin_session";
 
@@ -32,22 +32,27 @@ export async function verifyPassword(password: string) {
 }
 
 export async function hasAdminAccount() {
-  return Boolean(await readState<{ username: string; passwordHash: string }>(ACCOUNT_KEY));
+  const accounts = await readState<Record<string, { username: string; passwordHash: string }>>(ACCOUNT_KEY);
+  return Boolean(accounts && Object.keys(accounts).length);
 }
 
 export async function verifyAdminCredentials(username: string, password: string) {
-  const account = await readState<{ username: string; passwordHash: string }>(ACCOUNT_KEY);
-  if (account && account.username.toLowerCase() !== username.trim().toLowerCase()) return false;
+  const cleanUsername = username.trim().toLowerCase();
+  const accounts = await readState<Record<string, { username: string; passwordHash: string }>>(ACCOUNT_KEY);
+  const account = accounts?.[cleanUsername];
   if (account) return (await hashPassword(password)) === account.passwordHash;
+  if (accounts && Object.keys(accounts).length) return false;
   return verifyPassword(password);
 }
 
 export async function createAdminAccount(username: string, password: string) {
   const cleanUsername = username.trim();
-  if (!cleanUsername || password.length < 8 || (await hasAdminAccount())) throw new Error("Invalid account");
+  if (!cleanUsername || password.length < 8) throw new Error("Invalid account");
+  const accounts = (await readState<Record<string, { username: string; passwordHash: string }>>(ACCOUNT_KEY)) ?? {};
+  if (accounts[cleanUsername.toLowerCase()]) throw new Error("Account exists");
   const passwordHash = await hashPassword(password);
-  await writeState(ACCOUNT_KEY, { username: cleanUsername, passwordHash });
-  await writeState(PASSWORD_KEY, passwordHash);
+  accounts[cleanUsername.toLowerCase()] = { username: cleanUsername, passwordHash };
+  await writeState(ACCOUNT_KEY, accounts);
 }
 
 export async function changePassword(password: string) {
@@ -62,10 +67,22 @@ export async function createAdminSession() {
   return token;
 }
 
+export async function createAdminSessionFor(username = "admin") {
+  const token = crypto.randomUUID();
+  await writeState(`${SESSION_PREFIX}${token}`, { username, expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 14 });
+  return token;
+}
+
 export async function isValidAdminToken(token: string | undefined) {
   if (!token) return false;
   const session = await readState<{ expiresAt: number }>(`${SESSION_PREFIX}${token}`);
   return Boolean(session && session.expiresAt > Date.now());
+}
+
+export async function usernameFromToken(token: string | undefined) {
+  if (!token) return null;
+  const session = await readState<{ username?: string; expiresAt: number }>(`${SESSION_PREFIX}${token}`);
+  return session && session.expiresAt > Date.now() ? session.username ?? "admin" : null;
 }
 
 export function tokenFromRequest(request: Request) {
@@ -78,6 +95,14 @@ export function tokenFromRequest(request: Request) {
 
 export async function isAdminRequest(request: Request) {
   return isValidAdminToken(tokenFromRequest(request));
+}
+
+export async function adminUsernameFromRequest(request: Request) {
+  return usernameFromToken(tokenFromRequest(request));
+}
+
+export function scopedStateKey(base: string, username: string | null | undefined) {
+  return `${base}:${encodeURIComponent(username || "legacy")}`;
 }
 
 export async function requireAdmin() {

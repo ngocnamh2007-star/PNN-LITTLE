@@ -111,7 +111,8 @@ export function saveSelection(selection: GiftSelection | null) {
 export async function loadRemoteConfig(): Promise<LoveConfig> {
   if (["localhost", "127.0.0.1"].includes(window.location.hostname)) return loadConfig();
   try {
-    const response = await fetch("/api/config", { cache: "no-store" });
+    const account = new URLSearchParams(window.location.search).get("account");
+    const response = await fetch(`/api/config${account ? `?account=${encodeURIComponent(account)}` : ""}`, { cache: "no-store" });
     if (!response.ok) throw new Error("Config unavailable");
     const payload = (await response.json()) as { config: LoveConfig };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload.config));
@@ -138,7 +139,8 @@ export async function saveRemoteConfig(config: LoveConfig) {
 export async function loadRemoteSelection(): Promise<GiftSelection | null> {
   if (["localhost", "127.0.0.1"].includes(window.location.hostname)) return loadSelection();
   try {
-    const response = await fetch("/api/selection", { cache: "no-store" });
+    const account = new URLSearchParams(window.location.search).get("account");
+    const response = await fetch(`/api/selection${account ? `?account=${encodeURIComponent(account)}` : ""}`, { cache: "no-store" });
     if (!response.ok) throw new Error("Selection unavailable");
     const payload = (await response.json()) as { selection: GiftSelection | null };
     if (payload.selection) {
@@ -157,7 +159,8 @@ export async function saveRemoteSelection(selection: GiftSelection) {
     saveSelection(selection);
     return;
   }
-  const response = await fetch("/api/selection", {
+  const account = new URLSearchParams(window.location.search).get("account");
+  const response = await fetch(`/api/selection${account ? `?account=${encodeURIComponent(account)}` : ""}`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ selection }),

@@ -1,15 +1,17 @@
-import { isAdminRequest } from "../../admin-auth";
+import { adminUsernameFromRequest, isAdminRequest, scopedStateKey } from "../../admin-auth";
 import { defaultConfig, LoveConfig } from "../../site-config";
 import { readState, writeState } from "../state-store";
 
 const CONFIG_KEY = "love-config";
 const MUSIC_STATE_KEY = "love-music";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const account = url.searchParams.get("account") || await adminUsernameFromRequest(request);
   try {
     const [config, music] = await Promise.all([
-      readState<LoveConfig>(CONFIG_KEY),
-      readState<LoveConfig["music"]>(MUSIC_STATE_KEY),
+      readState<LoveConfig>(scopedStateKey(CONFIG_KEY, account)),
+      readState<LoveConfig["music"]>(scopedStateKey(MUSIC_STATE_KEY, account)),
     ]);
     return Response.json({
       config: {
@@ -32,6 +34,6 @@ export async function PUT(request: Request) {
   if (!payload.config?.recipient || !Array.isArray(payload.config.gifts)) {
     return Response.json({ error: "Invalid configuration" }, { status: 400 });
   }
-  await writeState(CONFIG_KEY, payload.config);
+  await writeState(scopedStateKey(CONFIG_KEY, await adminUsernameFromRequest(request)), payload.config);
   return Response.json({ config: payload.config });
 }
