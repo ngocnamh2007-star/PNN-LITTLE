@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { readState, writeState } from "./api/state-store";
 
 const PASSWORD_KEY = "admin-password-hash";
+const ACCOUNT_KEY = "admin-account";
 const SESSION_PREFIX = "admin-session:";
 export const SESSION_COOKIE = "pnn_admin_session";
 
@@ -28,6 +29,25 @@ export async function verifyPassword(password: string) {
     difference |= expectedHash.charCodeAt(index) ^ receivedHash.charCodeAt(index);
   }
   return difference === 0;
+}
+
+export async function hasAdminAccount() {
+  return Boolean(await readState<{ username: string; passwordHash: string }>(ACCOUNT_KEY));
+}
+
+export async function verifyAdminCredentials(username: string, password: string) {
+  const account = await readState<{ username: string; passwordHash: string }>(ACCOUNT_KEY);
+  if (account && account.username.toLowerCase() !== username.trim().toLowerCase()) return false;
+  if (account) return (await hashPassword(password)) === account.passwordHash;
+  return verifyPassword(password);
+}
+
+export async function createAdminAccount(username: string, password: string) {
+  const cleanUsername = username.trim();
+  if (!cleanUsername || password.length < 8 || (await hasAdminAccount())) throw new Error("Invalid account");
+  const passwordHash = await hashPassword(password);
+  await writeState(ACCOUNT_KEY, { username: cleanUsername, passwordHash });
+  await writeState(PASSWORD_KEY, passwordHash);
 }
 
 export async function changePassword(password: string) {

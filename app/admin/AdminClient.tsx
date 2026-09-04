@@ -63,6 +63,7 @@ export default function AdminPage() {
   const [newLine, setNewLine] = useState("");
   const [selection, setSelection] = useState<GiftSelection | null>(null);
   const [status, setStatus] = useState("");
+  const [shareLink, setShareLink] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -260,7 +261,8 @@ export default function AdminPage() {
       const optimizedConfig = { ...config, photos: optimizedPhotos };
       await saveRemoteConfig(optimizedConfig);
       setConfig(optimizedConfig);
-      setStatus("Đã lưu nội dung thành công");
+      setShareLink(`${window.location.origin}/`);
+      setStatus("Đã lưu nội dung thành công — link đã sẵn sàng để gửi");
     } catch {
       setStatus("Không thể lưu ảnh. Hãy xóa một ảnh rồi thử lại.");
     }
@@ -604,6 +606,12 @@ export default function AdminPage() {
           {status && <span className="save-status">{status}</span>}
           <button className="save-button" type="button" onClick={persist}>Lưu thay đổi</button>
         </div>
+        {shareLink && (
+          <div className="share-link">
+            <input readOnly value={shareLink} aria-label="Link gửi người nhận" />
+            <button type="button" onClick={() => void navigator.clipboard?.writeText(shareLink)}>Sao chép link</button>
+          </div>
+        )}
       </footer>
     </main>
   );
