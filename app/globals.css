@@ -224,7 +224,10 @@ button { color: inherit; }
 .share-link { width: 100%; display: flex; gap: 8px; margin-top: 12px; }
 .share-link input { min-width: 0; flex: 1; height: 42px; padding: 0 12px; color: #d9c8dc; border: 1px solid #ffffff20; border-radius: 10px; background: #0d0a10; }
 .share-link button { border: 1px solid #ffffff24; border-radius: 10px; color: white; background: #ffffff0c; cursor: pointer; padding: 0 12px; }
-.customer-footer { max-width: 1180px; margin: 34px auto 0; padding: 22px; display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid #ffffff18; color: #9d8fa1; font-size: 12px; }
+.customer-footer { max-width: 1180px; margin: 34px auto 0; padding: 28px 22px; display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); gap: 28px; border-top: 1px solid #ffffff18; color: #9d8fa1; font-size: 12px; line-height: 1.6; }
+.customer-footer div { display: grid; align-content: start; gap: 5px; }
+.customer-footer b { color: #f0d7ed; font-size: 13px; }
+.customer-footer p { margin: 0; }
 .customer-footer strong { color: #f08abb; letter-spacing: .18em; }
 .owner-accounts { max-width: 1180px; margin: auto; }
 .owner-account { display: grid; grid-template-columns: 12px minmax(160px, 1fr) 130px auto auto auto; gap: 12px; align-items: center; padding: 14px 0; border-bottom: 1px solid #ffffff12; color: #c8bbc9; }
