@@ -72,6 +72,7 @@ export default function AdminPage() {
   const [musicProgress, setMusicProgress] = useState(0);
   const [selectedMusic, setSelectedMusic] = useState<File | null>(null);
   const [musicStatus, setMusicStatus] = useState("");
+  const [siteInfo, setSiteInfo] = useState({ intro: "", contact: "" });
 
   useEffect(() => {
     const updateSelection = () => void loadRemoteSelection().then(setSelection);
@@ -80,6 +81,7 @@ export default function AdminPage() {
     };
     void loadRemoteConfig().then(setConfig);
     void fetch("/api/admin/me").then((response) => response.ok ? response.json() : null).then((data: { username?: string } | null) => setAccountName(data?.username || ""));
+    void fetch("/api/site-info").then((r) => r.json()).then((data: { info: { intro: string; contact: string } }) => setSiteInfo(data.info));
     updateSelection();
     window.addEventListener("storage", updateSelection);
     window.addEventListener("love-selection-updated", updateSelection);
@@ -617,7 +619,7 @@ export default function AdminPage() {
           </div>
         )}
       </footer>
-      <footer className="customer-footer"><strong>PNN-LITTLE</strong><span>Tạo món quà trực tuyến dành riêng cho người bạn thương.</span></footer>
+      <footer className="customer-footer"><strong>PNN-LITTLE</strong><span>{siteInfo.intro}</span><span>{siteInfo.contact}</span></footer>
     </main>
   );
 }

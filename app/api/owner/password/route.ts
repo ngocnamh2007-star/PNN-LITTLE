@@ -1,0 +1,2 @@
+import { changeOwnerPassword, isOwnerRequest } from "../../../admin-auth";
+export async function POST(request: Request) { if (!(await isOwnerRequest(request))) return Response.json({ error: "Unauthorized" }, { status: 401 }); const payload = (await request.json()) as { password?: string }; if (!payload.password || !(await changeOwnerPassword(payload.password))) return Response.json({ error: "Mật khẩu cần ít nhất 8 ký tự" }, { status: 400 }); return Response.json({ ok: true }); }

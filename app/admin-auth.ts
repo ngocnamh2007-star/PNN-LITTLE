@@ -89,9 +89,13 @@ export async function changeAdminPasswordByOwner(username: string, password: str
 }
 
 export async function verifyOwnerPassword(password: string) {
+  const stored = await readState<string>("owner-password-hash");
+  if (stored) return (await hashPassword(password)) === stored;
   const expected = secret("ADMIN_PASSWORD");
   return Boolean(expected) && password === expected;
 }
+
+export async function changeOwnerPassword(password: string) { if (password.length < 8) return false; await writeState("owner-password-hash", await hashPassword(password)); return true; }
 
 export async function createOwnerSession() {
   const token = crypto.randomUUID();
