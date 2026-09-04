@@ -6,6 +6,7 @@ export default function AdminLoginPage() {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -33,20 +34,14 @@ export default function AdminLoginPage() {
         <p className="eyebrow">PNN LITTLE</p>
         <h1>{mode === "signup" ? "Tạo tài khoản" : "Trang quản lý"}</h1>
         <p>{mode === "signup" ? "Tạo tài khoản riêng để bảo vệ trang quản lý." : "Đăng nhập để chỉnh sửa món quà."}</p>
-        <label><span>Tên tài khoản</span><input value={username} autoComplete="username" onChange={(event) => setUsername(event.target.value)} autoFocus /></label>
+        <label><span>{mode === "signup" ? "Email hoặc số điện thoại" : "Email / số điện thoại"}</span><input value={username} autoComplete="username" placeholder={mode === "signup" ? "vd: ban@email.com hoặc 09xxxxxxxx" : "Nhập tài khoản của bạn"} onChange={(event) => setUsername(event.target.value)} autoFocus /></label>
         <label>
           <span>Mật khẩu</span>
-          <input
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
+          <div className="password-input-wrap"><input type={showPassword ? "text" : "password"} autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} /><button type="button" aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"} onClick={() => setShowPassword((value) => !value)}>{showPassword ? "◉" : "◌"}</button></div>
         </label>
         {error && <div className="login-error">{error}</div>}
         <button type="submit" disabled={loading}>{loading ? "Đang xử lý..." : mode === "signup" ? "Tạo tài khoản" : "Đăng nhập"}</button>
         <button type="button" className="login-switch" onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(""); }}>{mode === "login" ? "Tạo tài khoản mới" : "Đã có tài khoản? Đăng nhập"}</button>
-        <a href="/">← Quay về trang món quà</a>
       </form>
     </main>
   );

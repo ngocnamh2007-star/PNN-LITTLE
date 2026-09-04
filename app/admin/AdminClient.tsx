@@ -309,6 +309,7 @@ export default function AdminPage() {
           <p className="eyebrow">A LITTLE LOVE</p>
           <h1>Quản lý món quà</h1>
           <p>Chỉnh nội dung một lần, trang người xem sẽ sử dụng đúng nội dung bạn đã lưu.</p>
+          {accountName && <p className="signed-in-as">Đang đăng nhập: <strong>{accountName}</strong></p>}
         </div>
         <Link href="/" className="preview-link">Xem trang món quà →</Link>
       </header>
