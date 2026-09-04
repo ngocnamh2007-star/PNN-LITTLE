@@ -1,0 +1,2 @@
+import { createOwnerSession, OWNER_COOKIE, verifyOwnerPassword } from "../../../admin-auth";
+export async function POST(request: Request) { const payload = (await request.json()) as { password?: string }; if (!payload.password || !(await verifyOwnerPassword(payload.password))) return Response.json({ error: "Unauthorized" }, { status: 401 }); const token = await createOwnerSession(); return Response.json({ ok: true }, { headers: { "set-cookie": `${OWNER_COOKIE}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=28800` } }); }

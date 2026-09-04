@@ -617,6 +617,7 @@ export default function AdminPage() {
           </div>
         )}
       </footer>
+      <footer className="customer-footer"><strong>PNN-LITTLE</strong><span>Tạo món quà trực tuyến dành riêng cho người bạn thương.</span></footer>
     </main>
   );
 }

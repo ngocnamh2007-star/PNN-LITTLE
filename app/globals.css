@@ -224,6 +224,13 @@ button { color: inherit; }
 .share-link { width: 100%; display: flex; gap: 8px; margin-top: 12px; }
 .share-link input { min-width: 0; flex: 1; height: 42px; padding: 0 12px; color: #d9c8dc; border: 1px solid #ffffff20; border-radius: 10px; background: #0d0a10; }
 .share-link button { border: 1px solid #ffffff24; border-radius: 10px; color: white; background: #ffffff0c; cursor: pointer; padding: 0 12px; }
+.customer-footer { max-width: 1180px; margin: 34px auto 0; padding: 22px; display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid #ffffff18; color: #9d8fa1; font-size: 12px; }
+.customer-footer strong { color: #f08abb; letter-spacing: .18em; }
+.owner-accounts { max-width: 1180px; margin: auto; }
+.owner-account { display: grid; grid-template-columns: 12px minmax(160px, 1fr) 130px auto auto auto; gap: 12px; align-items: center; padding: 14px 0; border-bottom: 1px solid #ffffff12; color: #c8bbc9; }
+.status-dot { width: 9px; height: 9px; border-radius: 50%; background: #3de58b; box-shadow: 0 0 10px #3de58b; }
+.status-dot.offline { background: #777; box-shadow: none; }
+.owner-account button { padding: 8px 10px; border: 1px solid #ffffff24; border-radius: 8px; color: white; background: #ffffff0a; cursor: pointer; }
 .login-error { margin-top: 10px; color: #ff8ca5; font-size: 12px; }
 .signed-in-as { margin-top: 8px !important; color: #e9a5cd !important; font-size: 12px; }
 .admin-actions > div { display: flex; align-items: center; gap: 14px; }

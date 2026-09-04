@@ -7,6 +7,7 @@ const PASSWORD_KEY = "admin-password-hash";
 const ACCOUNT_KEY = "admin-accounts";
 const SESSION_PREFIX = "admin-session:";
 export const SESSION_COOKIE = "pnn_admin_session";
+export const OWNER_COOKIE = "pnn_owner_session";
 
 function secret(name: "ADMIN_PASSWORD" | "ADMIN_SALT") {
   const runtime = env as unknown as Record<string, unknown>;
@@ -40,7 +41,7 @@ export async function verifyAdminCredentials(username: string, password: string)
   const cleanUsername = username.trim().toLowerCase();
   const accounts = await readState<Record<string, { username: string; passwordHash: string }>>(ACCOUNT_KEY);
   const account = accounts?.[cleanUsername];
-  if (account) return (await hashPassword(password)) === account.passwordHash;
+  if (account) return !account.disabled && (await hashPassword(password)) === account.passwordHash;
   if (accounts && Object.keys(accounts).length) return false;
   return verifyPassword(password);
 }
@@ -62,6 +63,47 @@ export async function deleteAdminAccount(username: string) {
   await deleteState(`love-config:${encodeURIComponent(username)}`);
   await deleteState(`love-music:${encodeURIComponent(username)}`);
   await deleteState(`gift-selection:${encodeURIComponent(username)}`);
+}
+
+export async function listAdminAccounts() {
+  return (await readState<Record<string, { username: string; passwordHash: string; disabled?: boolean }>>(ACCOUNT_KEY)) ?? {};
+}
+
+export async function setAdminAccountDisabled(username: string, disabled: boolean) {
+  const accounts = await listAdminAccounts();
+  const key = username.trim().toLowerCase();
+  if (!accounts[key]) return false;
+  accounts[key].disabled = disabled;
+  await writeState(ACCOUNT_KEY, accounts);
+  return true;
+}
+
+export async function changeAdminPasswordByOwner(username: string, password: string) {
+  const accounts = await listAdminAccounts();
+  const key = username.trim().toLowerCase();
+  if (!accounts[key] || password.length < 8) return false;
+  const passwordHash = await hashPassword(password);
+  accounts[key].passwordHash = passwordHash;
+  await writeState(ACCOUNT_KEY, accounts);
+  return true;
+}
+
+export async function verifyOwnerPassword(password: string) {
+  const expected = secret("ADMIN_PASSWORD");
+  return Boolean(expected) && password === expected;
+}
+
+export async function createOwnerSession() {
+  const token = crypto.randomUUID();
+  await writeState(`owner-session:${token}`, { expiresAt: Date.now() + 1000 * 60 * 60 * 8 });
+  return token;
+}
+
+export async function isOwnerRequest(request: Request) {
+  const token = request.headers.get("cookie")?.split(";").map((v) => v.trim()).find((v) => v.startsWith(`${OWNER_COOKIE}=`))?.split("=")[1];
+  if (!token) return false;
+  const session = await readState<{ expiresAt: number }>(`owner-session:${token}`);
+  return Boolean(session && session.expiresAt > Date.now());
 }
 
 export async function changePassword(password: string) {
