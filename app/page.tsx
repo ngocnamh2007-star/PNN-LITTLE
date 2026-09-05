@@ -39,6 +39,7 @@ declare global {
 }
 
 export default function Home() {
+  const [showLanding, setShowLanding] = useState(false);
   const [config, setConfig] = useState<LoveConfig>(defaultConfig);
   const [phase, setPhase] = useState<"intro" | "loading" | "show" | "finished" | "gift">("intro");
   const [selection, setSelection] = useState<GiftSelection | null>(null);
@@ -50,6 +51,10 @@ export default function Home() {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const endingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dragPoint = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    setShowLanding(!new URLSearchParams(window.location.search).get("account"));
+  }, []);
 
   useEffect(() => {
     const update = () => void loadRemoteConfig().then(setConfig);
@@ -213,6 +218,8 @@ export default function Home() {
     await saveRemoteSelection(nextSelection);
   }
 
+  if (showLanding) return <PublicLanding />;
+
   return (
     <main className={`experience phase-${phase}`}>
       {config.music?.url && (
@@ -372,6 +379,26 @@ export default function Home() {
           </button>
         </section>
       )}
+    </main>
+  );
+}
+
+function PublicLanding() {
+  return (
+    <main className="public-landing">
+      <div className="landing-stars" />
+      <nav className="landing-nav">
+        <a className="landing-brand" href="/">♥ <span>PNN-LITTLE</span></a>
+        <a className="landing-login" href="/admin/login">Đăng nhập</a>
+      </nav>
+      <section className="landing-hero">
+        <p className="eyebrow">MỘT BẤT NGỜ NHỎ, MỘT KỶ NIỆM LỚN</p>
+        <h1>Tạo món quà<br /><em>chỉ dành riêng cho người thương.</em></h1>
+        <p className="landing-lead">Biến lời yêu thương, ảnh kỷ niệm và những điều bí mật thành một trải nghiệm đáng nhớ — chỉ với vài phút chuẩn bị.</p>
+        <div className="landing-actions"><a className="landing-primary" href="/admin/login?mode=signup">Bắt đầu tạo món quà <span>→</span></a><a className="landing-secondary" href="/admin/login">Đăng nhập</a></div>
+      </section>
+      <section className="landing-features"><article><span>✦</span><h2>Cá nhân hóa</h2><p>Thêm lời nhắn, ảnh, nhạc và kiểu chữ theo câu chuyện của riêng bạn.</p></article><article><span>♡</span><h2>Gửi riêng tư</h2><p>Mỗi tài khoản có một đường link quà tặng riêng để gửi cho người thương.</p></article><article><span>✧</span><h2>Khoảnh khắc bất ngờ</h2><p>Không gian chữ 3D, hiệu ứng sao và món quà bí mật chờ được khám phá.</p></article></section>
+      <footer className="landing-footer">© {new Date().getFullYear()} PNN-LITTLE · Tạo điều dễ thương cho người bạn yêu.</footer>
     </main>
   );
 }

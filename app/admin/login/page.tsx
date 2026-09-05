@@ -10,6 +10,7 @@ export default function AdminLoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [info, setInfo] = useState<{ intro: string; contact: string; address: string; phone: string; facebook: string; twitter: string }>({ intro: "", contact: "", address: "", phone: "", facebook: "", twitter: "" });
+  useEffect(() => { if (new URLSearchParams(window.location.search).get("mode") === "signup") setMode("signup"); }, []);
   useEffect(() => { void fetch("/api/site-info").then((r) => r.json()).then((data) => setInfo(data.info)); }, []);
 
   async function submit(event: FormEvent) {
