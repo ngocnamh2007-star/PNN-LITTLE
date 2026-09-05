@@ -1,10 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 type Account = { username: string; disabled: boolean };
-type Info = { intro: string; contact: string; address: string; phone: string; facebook: string; twitter: string; links: string; landingEyebrow: string; landingTitle: string; landingAccent: string; landingLead: string; featureOneTitle: string; featureOneText: string; featureTwoTitle: string; featureTwoText: string; featureThreeTitle: string; featureThreeText: string };
+type Info = { intro: string; contact: string; address: string; phone: string; facebook: string; twitter: string; socialLinks: string; links: string; landingEyebrow: string; landingTitle: string; landingAccent: string; landingLead: string; featureOneTitle: string; featureOneText: string; featureTwoTitle: string; featureTwoText: string; featureThreeTitle: string; featureThreeText: string };
 export default function OwnerClient() {
   const [accounts, setAccounts] = useState<Account[]>([]);
-  const [info, setInfo] = useState<Info>({ intro: "", contact: "", address: "", phone: "", facebook: "", twitter: "", links: "", landingEyebrow: "", landingTitle: "", landingAccent: "", landingLead: "", featureOneTitle: "", featureOneText: "", featureTwoTitle: "", featureTwoText: "", featureThreeTitle: "", featureThreeText: "" });
+  const [info, setInfo] = useState<Info>({ intro: "", contact: "", address: "", phone: "", facebook: "", twitter: "", socialLinks: "", links: "", landingEyebrow: "", landingTitle: "", landingAccent: "", landingLead: "", featureOneTitle: "", featureOneText: "", featureTwoTitle: "", featureTwoText: "", featureThreeTitle: "", featureThreeText: "" });
   const [message, setMessage] = useState(""); const [ownerPassword, setOwnerPassword] = useState("");
   async function load() { const a = await fetch("/api/owner/accounts"); if (a.ok) setAccounts((await a.json()).accounts); const i = await fetch("/api/site-info"); if (i.ok) setInfo((await i.json()).info); }
   useEffect(() => { void load(); }, []);
