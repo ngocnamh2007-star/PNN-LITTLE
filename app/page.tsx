@@ -43,13 +43,25 @@ export default function Home() {
   const [phase, setPhase] = useState<"intro" | "loading" | "show" | "finished" | "gift">("intro");
   const [selection, setSelection] = useState<GiftSelection | null>(null);
   const [muted, setMuted] = useState(false);
-  const [rotation, setRotation] = useState({ x: -4, y: 0 });
   const [dragging, setDragging] = useState(false);
   const [gyroEnabled, setGyroEnabled] = useState(false);
   const audio = useRef<HTMLAudioElement | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const endingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dragPoint = useRef({ x: 0, y: 0 });
+  const sceneRef = useRef<HTMLDivElement | null>(null);
+  const rotationRef = useRef({ x: -4, y: 0 });
+  const orientationTarget = useRef({ x: -4, y: 0 });
+  const orientationFrame = useRef<number | null>(null);
+  const dragFrame = useRef<number | null>(null);
+  const pendingDrag = useRef({ x: 0, y: 0 });
+
+  function applyRotation(next: { x: number; y: number }) {
+    rotationRef.current = next;
+    if (sceneRef.current) {
+      sceneRef.current.style.transform = `rotateX(${next.x}deg) rotateY(${next.y}deg)`;
+    }
+  }
 
   useEffect(() => {
     const update = () => void loadRemoteConfig().then(setConfig);
@@ -96,23 +108,42 @@ export default function Home() {
   useEffect(() => {
     if (!gyroEnabled || phase !== "show") return;
     const moveWithPhone = (event: DeviceOrientationEvent) => {
-      if (dragging || event.beta === null || event.gamma === null) return;
+      if (event.beta === null || event.gamma === null) return;
       const portraitTilt = Math.max(-35, Math.min(35, event.beta - 45));
       const sideTilt = Math.max(-45, Math.min(45, event.gamma));
-      setRotation({
+      orientationTarget.current = {
         x: Math.max(-18, Math.min(18, -portraitTilt * 0.32)),
         y: sideTilt * 0.42,
-      });
+      };
+      if (orientationFrame.current === null) {
+        const smooth = () => {
+          const current = rotationRef.current;
+          const target = orientationTarget.current;
+          const next = { x: current.x + (target.x - current.x) * 0.16, y: current.y + (target.y - current.y) * 0.16 };
+          applyRotation(next);
+          if (Math.abs(target.x - next.x) > 0.08 || Math.abs(target.y - next.y) > 0.08) {
+            orientationFrame.current = requestAnimationFrame(smooth);
+          } else {
+            orientationFrame.current = null;
+            applyRotation(target);
+          }
+        };
+        orientationFrame.current = requestAnimationFrame(smooth);
+      }
     };
     window.addEventListener("deviceorientation", moveWithPhone, true);
-    return () => window.removeEventListener("deviceorientation", moveWithPhone, true);
-  }, [gyroEnabled, dragging, phase]);
+    return () => {
+      window.removeEventListener("deviceorientation", moveWithPhone, true);
+      if (orientationFrame.current !== null) cancelAnimationFrame(orientationFrame.current);
+      orientationFrame.current = null;
+    };
+  }, [gyroEnabled, phase]);
 
   const words = useMemo(() => {
     const lines = config.floatingLines.length
       ? config.floatingLines
       : [config.mainMessage];
-    return Array.from({ length: 128 }, (_, i) => ({
+    return Array.from({ length: 96 }, (_, i) => ({
       id: i,
       text: i % 7 === 0 ? "♥" : lines[i % lines.length],
       left: -8 + ((i * 37 + 7) % 112),
@@ -198,13 +229,19 @@ export default function Home() {
 
   function moveScene(event: PointerEvent<HTMLElement>) {
     if (!dragging) return;
-    const deltaX = event.clientX - dragPoint.current.x;
-    const deltaY = event.clientY - dragPoint.current.y;
-    dragPoint.current = { x: event.clientX, y: event.clientY };
-    setRotation((current) => ({
-      x: Math.max(-24, Math.min(24, current.x - deltaY * 0.12)),
-      y: current.y + deltaX * 0.16,
-    }));
+    pendingDrag.current = { x: event.clientX, y: event.clientY };
+    if (dragFrame.current !== null) return;
+    dragFrame.current = requestAnimationFrame(() => {
+      dragFrame.current = null;
+      const deltaX = pendingDrag.current.x - dragPoint.current.x;
+      const deltaY = pendingDrag.current.y - dragPoint.current.y;
+      dragPoint.current = pendingDrag.current;
+      const current = rotationRef.current;
+      applyRotation({
+        x: Math.max(-24, Math.min(24, current.x - deltaY * 0.12)),
+        y: current.y + deltaX * 0.16,
+      });
+    });
   }
 
   async function chooseGift(giftId: string) {
@@ -274,7 +311,8 @@ export default function Home() {
           <div className="stars stars-near" />
           <div
             className="scene-3d"
-            style={{ transform: `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)` }}
+            ref={sceneRef}
+            style={{ transform: "rotateX(-4deg) rotateY(0deg)" }}
           >
             <div className="tunnel-glow" />
             <div className={`word-cloud font-${config.fontStyle}`} aria-hidden="true">

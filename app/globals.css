@@ -44,7 +44,7 @@ button { color: inherit; }
 .stars { position: absolute; inset: -20%; pointer-events: none; background-image: radial-gradient(#fff 1px, transparent 1px); mask-image: radial-gradient(#000 30%, transparent 80%); }
 .stars-far { opacity: .36; background-size: 37px 37px; animation: stars 25s linear infinite; }
 .stars-near { opacity: .82; background-size: 83px 83px; background-position: 19px 11px; filter: drop-shadow(0 0 4px white); animation: starsNear 14s linear infinite; }
-.scene-3d { position: absolute; inset: -5%; z-index: 3; display: grid; place-items: center; transform-style: preserve-3d; transition: transform .18s ease-out; will-change: transform; }
+.scene-3d { position: absolute; inset: -5%; z-index: 3; display: grid; place-items: center; transform-style: preserve-3d; transition: transform .12s ease-out; will-change: transform; contain: layout style paint; }
 .is-dragging .scene-3d { transition: none; }
 .tunnel-glow { position: absolute; inset: 10% 20%; border-radius: 50%; background: radial-gradient(ellipse, #ff209228, transparent 67%); transform: translateZ(-500px) scale(.5); filter: blur(35px); animation: tunnelBreath 4s ease-in-out infinite alternate; }
 .word-cloud { position: absolute; inset: 0; overflow: visible; transform-style: preserve-3d; }
@@ -264,6 +264,13 @@ button { color: inherit; }
 @keyframes hintFade { 0%, 60% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes appear { from { opacity: 0; transform: scale(.6); filter: blur(12px); } to { opacity: 1; transform: scale(1); filter: blur(0); } }
 @keyframes musicSpin { to { transform: rotate(360deg); } }
+
+@media (max-width: 700px) {
+  .scene-3d { transition: none; }
+  .floating-word, .floating-heart { text-shadow: 0 0 4px currentColor, 0 0 10px currentColor; }
+  .tunnel-glow { filter: blur(18px); }
+  .stars-near { filter: none; }
+}
 
 @media (max-width: 520px) {
   .intro-card { padding: 34px 22px 24px; }
