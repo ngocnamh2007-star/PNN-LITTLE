@@ -384,7 +384,7 @@ export default function Home() {
 }
 
 function PublicLanding() {
-  const [info, setInfo] = useState({ landingEyebrow: "MỘT BẤT NGỜ NHỎ, MỘT KỶ NIỆM LỚN", landingTitle: "Tạo món quà", landingAccent: "chỉ dành riêng cho người thương.", landingLead: "Biến lời yêu thương, ảnh kỷ niệm và những điều bí mật thành một trải nghiệm đáng nhớ — chỉ với vài phút chuẩn bị.", featureOneTitle: "Cá nhân hóa", featureOneText: "Thêm lời nhắn, ảnh, nhạc và kiểu chữ theo câu chuyện của riêng bạn.", featureTwoTitle: "Gửi riêng tư", featureTwoText: "Mỗi tài khoản có một đường link quà tặng riêng để gửi cho người thương.", featureThreeTitle: "Khoảnh khắc bất ngờ", featureThreeText: "Không gian chữ 3D, hiệu ứng sao và món quà bí mật chờ được khám phá." });
+  const [info, setInfo] = useState({ intro: "", contact: "", phone: "", socialLinks: "", landingEyebrow: "MỘT BẤT NGỜ NHỎ, MỘT KỶ NIỆM LỚN", landingTitle: "Tạo món quà", landingAccent: "chỉ dành riêng cho người thương.", landingLead: "Biến lời yêu thương, ảnh kỷ niệm và những điều bí mật thành một trải nghiệm đáng nhớ — chỉ với vài phút chuẩn bị.", featureOneTitle: "Cá nhân hóa", featureOneText: "Thêm lời nhắn, ảnh, nhạc và kiểu chữ theo câu chuyện của riêng bạn.", featureTwoTitle: "Gửi riêng tư", featureTwoText: "Mỗi tài khoản có một đường link quà tặng riêng để gửi cho người thương.", featureThreeTitle: "Khoảnh khắc bất ngờ", featureThreeText: "Không gian chữ 3D, hiệu ứng sao và món quà bí mật chờ được khám phá." });
   useEffect(() => { void fetch("/api/site-info").then((r) => r.json()).then((data) => setInfo((current) => ({ ...current, ...data.info }))).catch(() => undefined); }, []);
   return (
     <main className="public-landing">
@@ -400,7 +400,7 @@ function PublicLanding() {
         <div className="landing-actions"><a className="landing-primary" href="/admin/login?mode=signup">Bắt đầu tạo món quà <span>→</span></a><a className="landing-secondary" href="/admin/login">Đăng nhập</a></div>
       </section>
       <section className="landing-features"><article><span>✦</span><h2>{info.featureOneTitle}</h2><p>{info.featureOneText}</p></article><article><span>♡</span><h2>{info.featureTwoTitle}</h2><p>{info.featureTwoText}</p></article><article><span>✧</span><h2>{info.featureThreeTitle}</h2><p>{info.featureThreeText}</p></article></section>
-      <footer className="landing-footer">© {new Date().getFullYear()} PNN-LITTLE · Tạo điều dễ thương cho người bạn yêu.</footer>
+      <footer className="landing-footer"><strong>PNN-LITTLE</strong><span>{info.intro}</span><span>{info.phone || info.contact}</span><div className="landing-socials">{info.socialLinks.split("\n").filter(Boolean).map((line) => { const [name, ...parts] = line.split("|"); const url = parts.join("|").trim(); return <a key={line} href={url || undefined} target="_blank" rel="noreferrer">{name.trim()} ↗</a>; })}</div><small>© {new Date().getFullYear()} PNN-LITTLE · Tạo điều dễ thương cho người bạn yêu.</small></footer>
     </main>
   );
 }
