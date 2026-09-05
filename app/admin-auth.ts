@@ -124,14 +124,20 @@ export async function createAdminSession() {
 
 export async function createAdminSessionFor(username = "admin") {
   const token = crypto.randomUUID();
-  await writeState(`${SESSION_PREFIX}${token}`, { username, expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 14 });
+  const account = (await listAdminAccounts())[username.trim().toLowerCase()];
+  await writeState(`${SESSION_PREFIX}${token}`, { username, passwordHash: account?.passwordHash, expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 14 });
   return token;
 }
 
 export async function isValidAdminToken(token: string | undefined) {
   if (!token) return false;
-  const session = await readState<{ expiresAt: number }>(`${SESSION_PREFIX}${token}`);
-  return Boolean(session && session.expiresAt > Date.now());
+  const session = await readState<{ username?: string; passwordHash?: string; expiresAt: number }>(`${SESSION_PREFIX}${token}`);
+  if (!session || session.expiresAt <= Date.now()) return false;
+  if (session.username && session.passwordHash) {
+    const account = (await listAdminAccounts())[session.username.trim().toLowerCase()];
+    if (account && account.passwordHash !== session.passwordHash) return false;
+  }
+  return true;
 }
 
 export async function usernameFromToken(token: string | undefined) {
