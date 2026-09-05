@@ -9,7 +9,7 @@ export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [info, setInfo] = useState<{ intro: string; contact: string; address: string; phone: string; facebook: string; twitter: string }>({ intro: "", contact: "", address: "", phone: "", facebook: "", twitter: "" });
+  const [info, setInfo] = useState<{ intro: string; contact: string; address: string; phone: string; facebook: string; twitter: string; socialLinks: string }>({ intro: "", contact: "", address: "", phone: "", facebook: "", twitter: "", socialLinks: "" });
   useEffect(() => { if (new URLSearchParams(window.location.search).get("mode") === "signup") setMode("signup"); }, []);
   useEffect(() => { void fetch("/api/site-info").then((r) => r.json()).then((data) => setInfo(data.info)); }, []);
 
@@ -45,7 +45,7 @@ export default function AdminLoginPage() {
         {error && <div className="login-error">{error}</div>}
         <button type="submit" disabled={loading}>{loading ? "Đang xử lý..." : mode === "signup" ? "Tạo tài khoản" : "Đăng nhập"}</button>
         <button type="button" className="login-switch" onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(""); }}>{mode === "login" ? "Tạo tài khoản mới" : "Đã có tài khoản? Đăng nhập"}</button>
-      </form><footer className="login-footer"><strong>PNN-LITTLE</strong><span>{info.intro}</span><span>☎ {info.phone || info.contact}</span><span>Facebook: {info.facebook || "Đang cập nhật"}</span></footer></div>
+      </form><footer className="login-footer"><strong>PNN-LITTLE</strong><span>{info.intro}</span><span>☎ {info.phone || info.contact}</span><div className="login-socials">{(info.socialLinks || `Facebook | ${info.facebook}\nTwitter / X | ${info.twitter}`).split("\n").filter(Boolean).map((line) => { const [name, ...parts] = line.split("|"); const url = parts.join("|").trim(); return <a key={line} href={url || undefined} target="_blank" rel="noreferrer">{name.trim()} ↗</a>; })}</div></footer></div>
     </main>
   );
 }
