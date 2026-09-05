@@ -384,6 +384,8 @@ export default function Home() {
 }
 
 function PublicLanding() {
+  const [info, setInfo] = useState({ landingEyebrow: "MỘT BẤT NGỜ NHỎ, MỘT KỶ NIỆM LỚN", landingTitle: "Tạo món quà", landingAccent: "chỉ dành riêng cho người thương.", landingLead: "Biến lời yêu thương, ảnh kỷ niệm và những điều bí mật thành một trải nghiệm đáng nhớ — chỉ với vài phút chuẩn bị.", featureOneTitle: "Cá nhân hóa", featureOneText: "Thêm lời nhắn, ảnh, nhạc và kiểu chữ theo câu chuyện của riêng bạn.", featureTwoTitle: "Gửi riêng tư", featureTwoText: "Mỗi tài khoản có một đường link quà tặng riêng để gửi cho người thương.", featureThreeTitle: "Khoảnh khắc bất ngờ", featureThreeText: "Không gian chữ 3D, hiệu ứng sao và món quà bí mật chờ được khám phá." });
+  useEffect(() => { void fetch("/api/site-info").then((r) => r.json()).then((data) => setInfo((current) => ({ ...current, ...data.info }))).catch(() => undefined); }, []);
   return (
     <main className="public-landing">
       <div className="landing-stars" />
@@ -392,12 +394,12 @@ function PublicLanding() {
         <a className="landing-login" href="/admin/login">Đăng nhập</a>
       </nav>
       <section className="landing-hero">
-        <p className="eyebrow">MỘT BẤT NGỜ NHỎ, MỘT KỶ NIỆM LỚN</p>
-        <h1>Tạo món quà<br /><em>chỉ dành riêng cho người thương.</em></h1>
-        <p className="landing-lead">Biến lời yêu thương, ảnh kỷ niệm và những điều bí mật thành một trải nghiệm đáng nhớ — chỉ với vài phút chuẩn bị.</p>
+        <p className="eyebrow">{info.landingEyebrow}</p>
+        <h1>{info.landingTitle}<br /><em>{info.landingAccent}</em></h1>
+        <p className="landing-lead">{info.landingLead}</p>
         <div className="landing-actions"><a className="landing-primary" href="/admin/login?mode=signup">Bắt đầu tạo món quà <span>→</span></a><a className="landing-secondary" href="/admin/login">Đăng nhập</a></div>
       </section>
-      <section className="landing-features"><article><span>✦</span><h2>Cá nhân hóa</h2><p>Thêm lời nhắn, ảnh, nhạc và kiểu chữ theo câu chuyện của riêng bạn.</p></article><article><span>♡</span><h2>Gửi riêng tư</h2><p>Mỗi tài khoản có một đường link quà tặng riêng để gửi cho người thương.</p></article><article><span>✧</span><h2>Khoảnh khắc bất ngờ</h2><p>Không gian chữ 3D, hiệu ứng sao và món quà bí mật chờ được khám phá.</p></article></section>
+      <section className="landing-features"><article><span>✦</span><h2>{info.featureOneTitle}</h2><p>{info.featureOneText}</p></article><article><span>♡</span><h2>{info.featureTwoTitle}</h2><p>{info.featureTwoText}</p></article><article><span>✧</span><h2>{info.featureThreeTitle}</h2><p>{info.featureThreeText}</p></article></section>
       <footer className="landing-footer">© {new Date().getFullYear()} PNN-LITTLE · Tạo điều dễ thương cho người bạn yêu.</footer>
     </main>
   );
