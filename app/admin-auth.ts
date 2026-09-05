@@ -46,6 +46,11 @@ export async function verifyAdminCredentials(username: string, password: string)
   return verifyPassword(password);
 }
 
+export async function isAdminAccountDisabled(username: string) {
+  const accounts = await listAdminAccounts();
+  return Boolean(accounts[username.trim().toLowerCase()]?.disabled);
+}
+
 export async function createAdminAccount(username: string, password: string) {
   const cleanUsername = username.trim();
   if (!cleanUsername || password.length < 8) throw new Error("Invalid account");
