@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://pnn-little.pnn-little-nam.workers.dev/sitemap.xml
