@@ -29,7 +29,12 @@ const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
-    if (url.pathname === "/google1291d6cdabca35fd.html" || url.pathname === "/admin/login/google1291d6cdabca35fd.html") {
+    if ([
+      "/google1291d6cdabca35fd.html",
+      "/google1291d6cdabca35fd",
+      "/admin/login/google1291d6cdabca35fd.html",
+      "/admin/login/google1291d6cdabca35fd",
+    ].includes(url.pathname)) {
       return new Response("google-site-verification: google1291d6cdabca35fd.html", {
         headers: { "content-type": "text/plain; charset=UTF-8", "cache-control": "public, max-age=3600" },
       });
