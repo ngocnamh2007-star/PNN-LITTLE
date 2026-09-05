@@ -47,6 +47,7 @@ export default function Home() {
   const [rotation, setRotation] = useState({ x: -4, y: 0 });
   const [dragging, setDragging] = useState(false);
   const [gyroEnabled, setGyroEnabled] = useState(false);
+  const [accountLocked, setAccountLocked] = useState(false);
   const audio = useRef<HTMLAudioElement | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const endingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -54,6 +55,8 @@ export default function Home() {
 
   useEffect(() => {
     setShowLanding(!new URLSearchParams(window.location.search).get("account"));
+    const account = new URLSearchParams(window.location.search).get("account");
+    if (account) void fetch(`/api/config?account=${encodeURIComponent(account)}`, { cache: "no-store" }).then((response) => { if (response.status === 423) setAccountLocked(true); });
   }, []);
 
   useEffect(() => {
@@ -219,6 +222,7 @@ export default function Home() {
   }
 
   if (showLanding) return <PublicLanding />;
+  if (accountLocked) return <main className="locked-account-screen"><div className="locked-account-card"><div className="login-lock">♥</div><h1>Tài khoản đã bị khóa</h1><p>Vui lòng liên hệ quản trị viên.</p></div></main>;
 
   return (
     <main className={`experience phase-${phase}`}>

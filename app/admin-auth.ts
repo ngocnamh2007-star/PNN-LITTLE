@@ -140,7 +140,7 @@ export async function isValidAdminToken(token: string | undefined) {
   if (!session || session.expiresAt <= Date.now()) return false;
   if (session.username && session.passwordHash) {
     const account = (await listAdminAccounts())[session.username.trim().toLowerCase()];
-    if (account && account.passwordHash !== session.passwordHash) return false;
+    if (account && (account.passwordHash !== session.passwordHash || account.disabled)) return false;
   }
   return true;
 }

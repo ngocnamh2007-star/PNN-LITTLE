@@ -1,4 +1,4 @@
-import { adminUsernameFromRequest, isAdminRequest, scopedStateKey } from "../../admin-auth";
+import { adminUsernameFromRequest, isAdminAccountDisabled, isAdminRequest, scopedStateKey } from "../../admin-auth";
 import { defaultConfig, LoveConfig } from "../../site-config";
 import { readState, writeState } from "../state-store";
 
@@ -8,6 +8,7 @@ const MUSIC_STATE_KEY = "love-music";
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const account = url.searchParams.get("account") || await adminUsernameFromRequest(request);
+  if (url.searchParams.get("account") && await isAdminAccountDisabled(account)) return Response.json({ error: "Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên." }, { status: 423 });
   try {
     const [config, music] = await Promise.all([
       readState<LoveConfig>(scopedStateKey(CONFIG_KEY, account)),

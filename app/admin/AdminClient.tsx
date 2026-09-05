@@ -87,8 +87,10 @@ export default function AdminPage() {
     window.addEventListener("love-selection-updated", updateSelection);
     document.addEventListener("visibilitychange", updateSelectionWhenVisible);
     const selectionPolling = window.setInterval(updateSelectionWhenVisible, 15000);
+    const accountPolling = window.setInterval(() => { void fetch("/api/admin/me", { cache: "no-store" }).then((response) => { if (response.status === 401) window.location.href = "/admin/login?locked=1"; }); }, 10000);
     return () => {
       window.clearInterval(selectionPolling);
+      window.clearInterval(accountPolling);
       window.removeEventListener("storage", updateSelection);
       window.removeEventListener("love-selection-updated", updateSelection);
       document.removeEventListener("visibilitychange", updateSelectionWhenVisible);
