@@ -72,7 +72,7 @@ export default function AdminPage() {
   const [musicProgress, setMusicProgress] = useState(0);
   const [selectedMusic, setSelectedMusic] = useState<File | null>(null);
   const [musicStatus, setMusicStatus] = useState("");
-  const [siteInfo, setSiteInfo] = useState({ intro: "", contact: "", address: "", phone: "", facebook: "", twitter: "", links: "" });
+  const [siteInfo, setSiteInfo] = useState({ intro: "", contact: "", address: "", phone: "", facebook: "", twitter: "", socialLinks: "", links: "" });
 
   useEffect(() => {
     const updateSelection = () => void loadRemoteSelection().then(setSelection);
@@ -619,7 +619,7 @@ export default function AdminPage() {
           </div>
         )}
       </footer>
-      <footer className="customer-footer"><div><strong>PNN-LITTLE</strong><p>{siteInfo.intro}</p></div><div><b>Liên kết</b>{siteInfo.links.split("\n").map((link) => <span key={link}>{link}</span>)}</div><div><b>Chăm sóc khách hàng</b><span>Facebook: {siteInfo.facebook || "Đang cập nhật"}</span><span>Twitter: {siteInfo.twitter || "Đang cập nhật"}</span></div><div><b>Liên hệ</b><span>{siteInfo.address}</span><span>{siteInfo.phone && `☎ ${siteInfo.phone}`}</span><span>✉ {siteInfo.contact}</span></div></footer>
+      <footer className="customer-footer"><div><strong>PNN-LITTLE</strong><p>{siteInfo.intro}</p></div><div><b>Liên kết</b>{siteInfo.links.split("\n").map((link) => <span key={link}>{link}</span>)}</div><div><b>Chăm sóc khách hàng</b>{(siteInfo.socialLinks || `Facebook | ${siteInfo.facebook}\nTwitter / X | ${siteInfo.twitter}`).split("\n").filter(Boolean).map((line) => { const [name, ...urlParts] = line.split("|"); const url = urlParts.join("|").trim(); return <a key={line} href={url || undefined} target="_blank" rel="noreferrer">{name.trim()}{url ? " ↗" : ": Đang cập nhật"}</a>; })}</div><div><b>Liên hệ</b><span>{siteInfo.address}</span><span>{siteInfo.phone && `☎ ${siteInfo.phone}`}</span><span>✉ {siteInfo.contact}</span></div></footer>
     </main>
   );
 }
