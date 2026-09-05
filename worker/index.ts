@@ -29,6 +29,12 @@ const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
+    if (url.pathname === "/google1291d6cdabca35fd.html") {
+      return new Response("google-site-verification: google1291d6cdabca35fd.html", {
+        headers: { "content-type": "text/plain; charset=UTF-8", "cache-control": "public, max-age=3600" },
+      });
+    }
+
     if (url.pathname === "/_vinext/image") {
       const allowedWidths = [...DEFAULT_DEVICE_SIZES, ...DEFAULT_IMAGE_SIZES];
       return handleImageOptimization(request, {
