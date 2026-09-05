@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://pnn-little.pnn-little-nam.workers.dev"),
   applicationName: "PNN-LITTLE",
   keywords: ["PNN-LITTLE", "món quà online", "quà tặng người thương", "lời yêu thương"],
+  verification: { google: "google1291d6cdabca35fd" },
   icons: { icon: "/favicon.svg", shortcut: "/favicon.svg", apple: "/favicon.svg" },
   openGraph: {
     type: "website", locale: "vi_VN", url: "/", siteName: "PNN-LITTLE",
