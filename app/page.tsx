@@ -56,7 +56,11 @@ export default function Home() {
   useEffect(() => {
     setShowLanding(!new URLSearchParams(window.location.search).get("account"));
     const account = new URLSearchParams(window.location.search).get("account");
-    if (account) void fetch(`/api/config?account=${encodeURIComponent(account)}`, { cache: "no-store" }).then((response) => { if (response.status === 423) setAccountLocked(true); });
+    if (!account) return;
+    const checkAccount = () => void fetch(`/api/config?account=${encodeURIComponent(account)}`, { cache: "no-store" }).then((response) => { if (response.status === 423) setAccountLocked(true); });
+    checkAccount();
+    const accountPolling = window.setInterval(checkAccount, 10000);
+    return () => window.clearInterval(accountPolling);
   }, []);
 
   useEffect(() => {
