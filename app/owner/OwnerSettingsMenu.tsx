@@ -1,0 +1,7 @@
+"use client";
+import { useState } from "react";
+export default function OwnerSettingsMenu(){
+ const [open,setOpen]=useState(false);
+ async function logout(){await fetch("/api/owner/logout",{method:"POST"});window.location.href="/owner/login";}
+ return <div className="owner-settings-menu-wrap"><button type="button" className="settings-button" aria-label="Cài đặt" onClick={()=>setOpen(v=>!v)}>⚙</button>{open&&<div className="settings-menu"><button type="button" onClick={()=>{setOpen(false);document.querySelector(".owner-password-panel")?.scrollIntoView({behavior:"smooth"});}}>Đổi mật khẩu</button><button type="button" onClick={()=>void logout()}>Đăng xuất</button></div>}</div>;
+}

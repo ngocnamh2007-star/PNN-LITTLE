@@ -108,6 +108,7 @@ button { color: inherit; }
 
 .admin-page { min-height: 100svh; padding: 48px max(24px, 6vw) 110px; color: #f7eff8; background: radial-gradient(circle at 92% 2%, #7f165577, transparent 34%), #0c0910; }
 .admin-header { max-width: 1180px; margin: 0 auto 34px; display: flex; align-items: end; justify-content: space-between; gap: 28px; }
+.settings-menu-wrap, .owner-settings-menu-wrap { position: relative; }.settings-button { width: 44px; height: 44px; border: 1px solid #ffffff30; border-radius: 50%; color: #f4ddec; background: #ffffff0b; cursor: pointer; font-size: 21px; }.settings-menu { position: absolute; top: 52px; right: 0; z-index: 30; display: grid; min-width: 190px; padding: 8px; border: 1px solid #ffffff20; border-radius: 14px; background: #1b1220; box-shadow: 0 16px 40px #0008; }.settings-menu button { padding: 11px 12px; border: 0; border-radius: 8px; color: #f6eaf7; background: transparent; text-align: left; cursor: pointer; }.settings-menu button:hover { background: #ffffff12; }.settings-menu .danger-menu-item { color: #ff94aa; }.owner-settings-menu-wrap { position: fixed; top: 24px; right: max(24px, 6vw); z-index: 40; }
 .admin-header h1 { margin: 5px 0 8px; font: italic clamp(36px, 6vw, 66px)/1 Georgia, serif; }
 .admin-header p:not(.eyebrow) { margin: 0; max-width: 600px; color: #bcaec0; line-height: 1.55; }
 .preview-link { flex: 0 0 auto; padding: 12px 18px; color: #fff; border: 1px solid #ffffff33; border-radius: 100px; text-decoration: none; background: #ffffff0a; }
@@ -248,6 +249,7 @@ button { color: inherit; }
 
 @keyframes drift { to { transform: translate(8%, -6%) rotate(18deg) scale(1.12); } }
 @keyframes beat { 50% { transform: scale(1.28); } }
+.admin-page > .admin-header > button { display: none; }
 @keyframes load { from { width: 4%; } to { width: 100%; } }
 @keyframes stars { to { background-position: 0 580px; } }
 @keyframes starsNear { to { background-position: 100px 760px; } }

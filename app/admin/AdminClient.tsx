@@ -68,6 +68,7 @@ export default function AdminPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPasswords, setShowPasswords] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [uploadingMusic, setUploadingMusic] = useState(false);
   const [musicProgress, setMusicProgress] = useState(0);
   const [selectedMusic, setSelectedMusic] = useState<File | null>(null);
@@ -315,6 +316,7 @@ export default function AdminPage() {
           <p>Chỉnh nội dung một lần, trang người xem sẽ sử dụng đúng nội dung bạn đã lưu.</p>
           {accountName && <p className="signed-in-as">Đang đăng nhập: <strong>{accountName}</strong></p>}
         </div>
+        <div className="settings-menu-wrap"><button type="button" className="settings-button" aria-label="Cài đặt" onClick={() => setSettingsOpen((value) => !value)}>⚙</button>{settingsOpen && <div className="settings-menu"><button type="button" onClick={() => { setSettingsOpen(false); document.querySelector(".security-panel")?.scrollIntoView({ behavior: "smooth" }); }}>Đổi mật khẩu</button><button type="button" onClick={() => { setSettingsOpen(false); resetAll(); }}>Khôi phục ban đầu</button><button type="button" onClick={() => void logout()}>Đăng xuất</button><button type="button" className="danger-menu-item" onClick={async () => { if (!window.confirm("Xóa tài khoản và toàn bộ dữ liệu của tài khoản này?")) return; const response = await fetch("/api/admin/account", { method: "DELETE" }); if (response.ok) window.location.href = "/admin/login"; }}>Xóa tài khoản</button></div>}</div>
       </header>
 
       <div className="admin-grid">
