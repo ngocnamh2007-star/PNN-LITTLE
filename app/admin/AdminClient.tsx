@@ -314,7 +314,7 @@ export default function AdminPage() {
 
   async function createQr() {
     if (!shareLink) return;
-    setQrData(await QRCode.toDataURL(shareLink, { width: 640, margin: 2, errorCorrectionLevel: "H", color: { dark: "#ff4f9f", light: "#120b18" } }));
+    setQrData(await QRCode.toDataURL(shareLink, { width: 640, margin: 4, errorCorrectionLevel: "H", color: { dark: "#151019", light: "#fff7fc" } }));
     setShowQr(true);
   }
 
@@ -338,17 +338,20 @@ export default function AdminPage() {
       context.fillText("PNN-LITTLE", 360, 72);
       const x = 80, y = 140, size = 560;
       if (qrStyle === "heart") {
-        context.save();
+        context.fillStyle = "#ff4f9f";
         context.beginPath();
-        context.moveTo(360, y + 500);
-        context.bezierCurveTo(310, y + 450, x, y + 300, x, y + 170);
-        context.bezierCurveTo(x, y + 45, x + 150, y + 5, 360, y + 145);
-        context.bezierCurveTo(x + 410, y + 5, x + size, y + 45, x + size, y + 170);
-        context.bezierCurveTo(x + size, y + 300, 410, y + 450, 360, y + 500);
-        context.clip();
+        context.moveTo(360, y + 545);
+        context.bezierCurveTo(300, y + 485, x - 10, y + 325, x - 10, y + 180);
+        context.bezierCurveTo(x - 10, y + 35, x + 155, y - 5, 360, y + 150);
+        context.bezierCurveTo(x + size - 155, y - 5, x + size + 10, y + 35, x + size + 10, y + 180);
+        context.bezierCurveTo(x + size + 10, y + 325, 420, y + 485, 360, y + 545);
+        context.fill();
+        context.fillStyle = "#fff7fc";
+        context.fillRect(120, 190, 480, 480);
+        context.drawImage(image, 120, 190, 480, 480);
+      } else {
+        context.drawImage(image, x, y, size, size);
       }
-      context.drawImage(image, x, y, size, size);
-      if (qrStyle === "heart") context.restore();
       setQrDownloadData(canvas.toDataURL("image/png"));
     };
     image.src = qrData;
@@ -667,7 +670,7 @@ export default function AdminPage() {
             <input readOnly value={shareLink} aria-label="Link gửi người nhận" />
             <button type="button" onClick={async () => { await navigator.clipboard?.writeText(shareLink); setStatus("Link đã được sao chép"); }}>Sao chép link</button>
             <button type="button" onClick={() => void createQr()}>Tạo mã QR</button>
-            {showQr && qrData && <div className="qr-tools"><label>Kiểu mã QR<select value={qrStyle} onChange={(event) => setQrStyle(event.target.value as "square" | "heart")}><option value="square">Hình vuông</option><option value="heart">Hình trái tim</option></select></label><div className="qr-card"><strong>PNN-LITTLE</strong><div className={`qr-preview qr-${qrStyle}`}><img src={qrData} alt="Mã QR link quà" /></div></div><a className="qr-download" href={qrDownloadData || qrData} download={`pnn-little-qr-${qrStyle}.png`}>Tải mã QR</a></div>}
+            {showQr && qrData && <div className="qr-tools"><label>Kiểu mã QR<select value={qrStyle} onChange={(event) => setQrStyle(event.target.value as "square" | "heart")}><option value="square">Hình vuông</option><option value="heart">Hình trái tim</option></select></label><div className={`qr-card qr-card-${qrStyle}`}><strong>PNN-LITTLE</strong><div className={`qr-preview qr-${qrStyle}`}><img src={qrData} alt="Mã QR link quà" /></div></div><a className="qr-download" href={qrDownloadData || qrData} download={`pnn-little-qr-${qrStyle}.png`}>Tải mã QR</a></div>}
           </div>
         )}
       </footer>
