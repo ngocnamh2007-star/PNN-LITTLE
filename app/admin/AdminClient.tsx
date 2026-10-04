@@ -681,7 +681,7 @@ export default function AdminPage() {
             <input readOnly value={shareLink} aria-label="Link gửi người nhận" />
             <button type="button" onClick={async () => { await navigator.clipboard?.writeText(shareLink); setStatus("Link đã được sao chép"); }}>Sao chép link</button>
             <button type="button" onClick={() => void createQr()}>Tạo mã QR</button>
-            {showQr && qrData && <div className="qr-tools"><label>Kiểu mã QR<select value={qrStyle} onChange={(event) => setQrStyle(event.target.value as "square" | "heart")}><option value="square">Hình vuông</option><option value="heart">Hình trái tim</option></select></label><div className={`qr-card qr-card-${qrStyle}`}><strong>PNN-LITTLE</strong><div className={`qr-preview qr-${qrStyle}`}><img src={qrData} alt="Mã QR link quà" /></div></div><a className="qr-download" href={qrDownloadData || qrData} download={`pnn-little-qr-${qrStyle}.png`}>Tải mã QR</a></div>}
+            {showQr && qrData && <div className="qr-tools"><label>Kiểu mã QR<select value={qrStyle} onChange={(event) => setQrStyle(event.target.value as "square" | "heart")}><option value="square">Hình vuông</option><option value="heart">Hình trái tim</option></select></label><div className={`qr-card qr-card-${qrStyle}`}><div className="qr-preview qr-preview-composite"><img src={qrDownloadData || qrData} alt="Mã QR PNN-LITTLE" /></div></div><a className="qr-download" href={qrDownloadData || qrData} download={`pnn-little-qr-${qrStyle}.png`}>Tải mã QR</a></div>}
           </div>
         )}
       </footer>
