@@ -26,6 +26,15 @@ type AdminSessionState = {
   revokedAt?: number;
 };
 
+type AdminAccount = {
+  username: string;
+  email: string;
+  phone: string;
+  passwordHash: string;
+  disabled?: boolean;
+  mustChangePassword?: boolean;
+};
+
 type OwnerSessionState = {
   id: string;
   token: string;
@@ -109,31 +118,51 @@ export async function verifyPassword(password: string) {
 }
 
 export async function hasAdminAccount() {
-  const accounts = await readState<Record<string, { username: string; passwordHash: string }>>(ACCOUNT_KEY);
+  const accounts = await readState<Record<string, AdminAccount>>(ACCOUNT_KEY);
   return Boolean(accounts && Object.keys(accounts).length);
 }
 
+function normalizePhone(value: string) {
+  return value.replace(/[\s().-]/g, "").replace(/^\+84/, "0");
+}
+
+async function findAdminAccount(identifier: string) {
+  const clean = identifier.trim().toLowerCase();
+  const accounts = await readState<Record<string, AdminAccount>>(ACCOUNT_KEY);
+  if (!accounts) return null;
+  return accounts[clean] || Object.values(accounts).find((account) => account.email?.trim().toLowerCase() === clean || normalizePhone(account.phone || "") === normalizePhone(identifier)) || null;
+}
+
+export async function adminUsernameForIdentifier(identifier: string) {
+  return (await findAdminAccount(identifier))?.username || identifier.trim();
+}
+
+export async function findAdminAccountByEmail(email: string) {
+  const account = await findAdminAccount(email);
+  return account && account.email?.trim().toLowerCase() === email.trim().toLowerCase() ? account : null;
+}
+
 export async function verifyAdminCredentials(username: string, password: string) {
-  const cleanUsername = username.trim().toLowerCase();
-  const accounts = await readState<Record<string, { username: string; passwordHash: string }>>(ACCOUNT_KEY);
-  const account = accounts?.[cleanUsername];
+  const account = await findAdminAccount(username);
   if (account) return !account.disabled && (await hashPassword(password)) === account.passwordHash;
+  const accounts = await readState<Record<string, AdminAccount>>(ACCOUNT_KEY);
   if (accounts && Object.keys(accounts).length) return false;
   return verifyPassword(password);
 }
 
 export async function isAdminAccountDisabled(username: string) {
-  const accounts = await listAdminAccounts();
-  return Boolean(accounts[username.trim().toLowerCase()]?.disabled);
+  return Boolean((await findAdminAccount(username))?.disabled);
 }
 
-export async function createAdminAccount(username: string, password: string) {
+export async function createAdminAccount(username: string, password: string, email: string, phone: string) {
   const cleanUsername = username.trim();
-  if (!cleanUsername || password.length < 8) throw new Error("Invalid account");
-  const accounts = (await readState<Record<string, { username: string; passwordHash: string }>>(ACCOUNT_KEY)) ?? {};
-  if (accounts[cleanUsername.toLowerCase()]) throw new Error("Account exists");
+  const cleanEmail = email.trim().toLowerCase();
+  const cleanPhone = normalizePhone(phone);
+  if (!cleanUsername || !cleanEmail || !cleanPhone || password.length < 8) throw new Error("Invalid account");
+  const accounts = (await readState<Record<string, AdminAccount>>(ACCOUNT_KEY)) ?? {};
+  if (accounts[cleanUsername.toLowerCase()] || Object.values(accounts).some((account) => account.email?.toLowerCase() === cleanEmail || normalizePhone(account.phone || "") === cleanPhone)) throw new Error("Account exists");
   const passwordHash = await hashPassword(password);
-  accounts[cleanUsername.toLowerCase()] = { username: cleanUsername, passwordHash };
+  accounts[cleanUsername.toLowerCase()] = { username: cleanUsername, email: cleanEmail, phone: cleanPhone, passwordHash, mustChangePassword: false };
   await writeState(ACCOUNT_KEY, accounts);
 }
 
@@ -150,7 +179,7 @@ export async function deleteAdminAccount(username: string) {
 }
 
 export async function listAdminAccounts() {
-  return (await readState<Record<string, { username: string; passwordHash: string; disabled?: boolean }>>(ACCOUNT_KEY)) ?? {};
+  return (await readState<Record<string, AdminAccount>>(ACCOUNT_KEY)) ?? {};
 }
 
 export async function setAdminAccountDisabled(username: string, disabled: boolean) {
@@ -185,11 +214,28 @@ export async function changeAdminPasswordFor(username: string, password: string)
   const passwordHash = await hashPassword(password);
   if (accounts[key]) {
     accounts[key].passwordHash = passwordHash;
+    accounts[key].mustChangePassword = false;
     await writeState(ACCOUNT_KEY, accounts);
   } else {
     await writeState(PASSWORD_KEY, passwordHash);
   }
   return passwordHash;
+}
+
+export async function adminMustChangePassword(username: string) {
+  return Boolean((await findAdminAccount(username))?.mustChangePassword);
+}
+
+export async function resetAdminPasswordByEmail(email: string, password: string) {
+  const account = await findAdminAccountByEmail(email);
+  if (!account) return null;
+  const accounts = await listAdminAccounts();
+  const key = account.username.trim().toLowerCase();
+  const passwordHash = await hashPassword(password);
+  accounts[key].passwordHash = passwordHash;
+  accounts[key].mustChangePassword = true;
+  await writeState(ACCOUNT_KEY, accounts);
+  return account;
 }
 
 async function ownerPasswordHash() {
@@ -345,7 +391,7 @@ export async function createAdminSession() {
 export async function createAdminSessionFor(username = "admin", request?: Request) {
   const token = crypto.randomUUID();
   const now = Date.now();
-  const cleanUsername = username.trim() || "admin";
+  const cleanUsername = await adminUsernameForIdentifier(username.trim() || "admin") || "admin";
   const session: AdminSessionState = {
     id: crypto.randomUUID(),
     token,

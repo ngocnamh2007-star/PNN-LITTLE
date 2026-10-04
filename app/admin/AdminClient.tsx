@@ -86,14 +86,14 @@ export default function AdminPage() {
       if (document.visibilityState === "visible") updateSelection();
     };
     void loadRemoteConfig().then(setConfig);
-    void fetch("/api/admin/me").then((response) => response.ok ? response.json() : null).then((data: { username?: string } | null) => setAccountName(data?.username || ""));
+    void fetch("/api/admin/me", { cache: "no-store" }).then((response) => response.ok ? response.json() : null).then((data: { username?: string; mustChangePassword?: boolean } | null) => { setAccountName(data?.username || ""); if (data?.mustChangePassword) window.dispatchEvent(new Event("admin-force-password")); });
     void fetch("/api/site-info").then((r) => r.json()).then((data: { info: { intro: string; contact: string } }) => setSiteInfo(data.info));
     updateSelection();
     window.addEventListener("storage", updateSelection);
     window.addEventListener("love-selection-updated", updateSelection);
     document.addEventListener("visibilitychange", updateSelectionWhenVisible);
     const selectionPolling = window.setInterval(updateSelectionWhenVisible, 15000);
-    const accountPolling = window.setInterval(() => { void fetch("/api/admin/me", { cache: "no-store" }).then(async (response) => { if (response.status !== 401) return; const data = (await response.json().catch(() => ({}))) as { code?: string }; window.location.href = data.code === "ACCOUNT_LOCKED" ? "/admin/login?locked=1" : "/admin/login?session=revoked"; }); }, 3000);
+    const accountPolling = window.setInterval(() => { void fetch("/api/admin/me", { cache: "no-store" }).then(async (response) => { if (response.status === 401) { const data = (await response.json().catch(() => ({}))) as { code?: string }; window.location.href = data.code === "ACCOUNT_LOCKED" ? "/admin/login?locked=1" : "/admin/login?session=revoked"; return; } const data = (await response.json().catch(() => ({}))) as { mustChangePassword?: boolean }; if (data.mustChangePassword) window.dispatchEvent(new Event("admin-force-password")); }); }, 3000);
     return () => {
       window.clearInterval(selectionPolling);
       window.clearInterval(accountPolling);
