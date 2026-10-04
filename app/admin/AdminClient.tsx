@@ -103,6 +103,15 @@ export default function AdminPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!settingsOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSettingsOpen(false);
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [settingsOpen]);
+
   function update<K extends keyof LoveConfig>(key: K, value: LoveConfig[K]) {
     setConfig((current) => ({ ...current, [key]: value }));
     setStatus("");
@@ -318,6 +327,26 @@ export default function AdminPage() {
     setShowQr(true);
   }
 
+  async function downloadQr(event: React.MouseEvent<HTMLAnchorElement>) {
+    const source = qrDownloadData || qrData;
+    if (!source || !/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) return;
+    event.preventDefault();
+    try {
+      const response = await fetch(source);
+      const blob = await response.blob();
+      const file = new File([blob], "pnn-little-qr.png", { type: "image/png" });
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ title: "Mã QR PNN-LITTLE", files: [file] });
+        setStatus("Đã mở chia sẻ — bạn chọn Lưu hình ảnh để lưu mã QR");
+        return;
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+    }
+    window.open(source, "_blank", "noopener,noreferrer");
+    setStatus("Mã QR đã mở ở tab mới — nhấn giữ ảnh để lưu");
+  }
+
   useEffect(() => {
     if (!qrData) return;
     const image = new Image();
@@ -380,7 +409,7 @@ export default function AdminPage() {
           <p>Chỉnh nội dung một lần, trang người xem sẽ sử dụng đúng nội dung bạn đã lưu.</p>
           {accountName && <p className="signed-in-as">Đang đăng nhập: <strong>{accountName}</strong></p>}
         </div>
-        <div className="settings-menu-wrap"><button type="button" className="settings-button" aria-label="Cài đặt" onClick={() => setSettingsOpen((value) => !value)}>⚙</button>{settingsOpen && <div className="settings-menu"><button type="button" onClick={() => { setSettingsOpen(false); window.dispatchEvent(new Event("admin-open-password")); }}>Đổi mật khẩu</button><button type="button" onClick={() => { setSettingsOpen(false); resetAll(); }}>Khôi phục ban đầu</button><button type="button" onClick={() => void logout()}>Đăng xuất</button><button type="button" className="danger-menu-item" onClick={async () => { if (!window.confirm("Xóa tài khoản và toàn bộ dữ liệu của tài khoản này?")) return; const response = await fetch("/api/admin/account", { method: "DELETE" }); if (response.ok) window.location.href = "/admin/login"; }}>Xóa tài khoản</button></div>}</div>
+        <div className="settings-menu-wrap"><button type="button" className="settings-button" aria-label="Cài đặt" onClick={() => setSettingsOpen((value) => !value)}>⚙</button>{settingsOpen && <div className="settings-menu" role="dialog" aria-label="Cài đặt"><div className="settings-menu-header"><strong>Cài đặt</strong><button type="button" className="settings-menu-close" aria-label="Đóng cài đặt" onClick={() => setSettingsOpen(false)}>×</button></div><button type="button" onClick={() => { setSettingsOpen(false); window.dispatchEvent(new Event("admin-open-password")); }}>Đổi mật khẩu</button><button type="button" onClick={() => { setSettingsOpen(false); resetAll(); }}>Khôi phục ban đầu</button><button type="button" onClick={() => void logout()}>Đăng xuất</button><button type="button" className="danger-menu-item" onClick={async () => { if (!window.confirm("Xóa tài khoản và toàn bộ dữ liệu của tài khoản này?")) return; const response = await fetch("/api/admin/account", { method: "DELETE" }); if (response.ok) window.location.href = "/admin/login"; }}>Xóa tài khoản</button></div>}</div>
       </header>
 
       <div className="admin-grid">
@@ -684,7 +713,7 @@ export default function AdminPage() {
             <input readOnly value={shareLink} aria-label="Link gửi người nhận" />
             <button type="button" onClick={async () => { await navigator.clipboard?.writeText(shareLink); setStatus("Link đã được sao chép"); }}>Sao chép link</button>
             <button type="button" onClick={() => void createQr()}>Tạo mã QR</button>
-            {showQr && qrData && <div className="qr-tools"><div className="qr-card qr-card-square"><strong>PNN-LITTLE</strong><div className="qr-preview qr-preview-composite"><img src={qrDownloadData || qrData} alt="Mã QR PNN-LITTLE" /></div></div><a className="qr-download" href={qrDownloadData || qrData} download="pnn-little-qr.png">Tải mã QR</a></div>}
+            {showQr && qrData && <div className="qr-tools"><div className="qr-card qr-card-square"><strong>PNN-LITTLE</strong><div className="qr-preview qr-preview-composite"><img src={qrDownloadData || qrData} alt="Mã QR PNN-LITTLE" /></div></div><a className="qr-download" href={qrDownloadData || qrData} download="pnn-little-qr.png" onClick={downloadQr}>Tải mã QR</a></div>}
           </div>
         )}
       </footer>
