@@ -332,17 +332,6 @@ export default function AdminPage() {
       gradient.addColorStop(1, "#3b103a");
       context.fillStyle = gradient;
       context.fillRect(0, 0, 720, 820);
-      context.save();
-      context.filter = "blur(28px)";
-      context.fillStyle = "#ff2f91aa";
-      context.beginPath();
-      context.arc(120, 280, 180, 0, Math.PI * 2);
-      context.fill();
-      context.fillStyle = "#190b31cc";
-      context.beginPath();
-      context.arc(610, 520, 220, 0, Math.PI * 2);
-      context.fill();
-      context.restore();
       context.fillStyle = "#ff8fc7";
       context.shadowColor = "#ff2f91";
       context.shadowBlur = 18;
