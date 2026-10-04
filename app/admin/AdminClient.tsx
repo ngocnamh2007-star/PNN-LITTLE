@@ -314,7 +314,7 @@ export default function AdminPage() {
 
   async function createQr() {
     if (!shareLink) return;
-    setQrData(await QRCode.toDataURL(shareLink, { width: 640, margin: 4, errorCorrectionLevel: "H", color: { dark: "#151019", light: "#fff7fc" } }));
+    setQrData(await QRCode.toDataURL(shareLink, { width: 640, margin: 4, errorCorrectionLevel: "H", color: { dark: "#e60073", light: "#fff7fc" } }));
     setShowQr(true);
   }
 
@@ -332,10 +332,24 @@ export default function AdminPage() {
       gradient.addColorStop(1, "#3b103a");
       context.fillStyle = gradient;
       context.fillRect(0, 0, 720, 820);
+      context.save();
+      context.filter = "blur(28px)";
+      context.fillStyle = "#ff2f91aa";
+      context.beginPath();
+      context.arc(120, 280, 180, 0, Math.PI * 2);
+      context.fill();
+      context.fillStyle = "#190b31cc";
+      context.beginPath();
+      context.arc(610, 520, 220, 0, Math.PI * 2);
+      context.fill();
+      context.restore();
       context.fillStyle = "#ff8fc7";
-      context.font = "700 30px sans-serif";
+      context.shadowColor = "#ff2f91";
+      context.shadowBlur = 18;
+      context.font = "800 32px sans-serif";
       context.textAlign = "center";
       context.fillText("PNN-LITTLE", 360, 72);
+      context.shadowBlur = 0;
       const x = 80, y = 140, size = 560;
       if (qrStyle === "heart") {
         context.fillStyle = "#ff4f9f";
