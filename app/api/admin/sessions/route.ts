@@ -13,6 +13,7 @@ export async function GET(request: Request) {
       expiresAt: session.expiresAt,
       device: session.device,
       ip: session.ip,
+      location: session.location || "Không xác định",
       active: await adminSessionIsActive(session),
       current: session.id === current.id,
     })));

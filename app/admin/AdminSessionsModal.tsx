@@ -9,6 +9,7 @@ type Session = {
   expiresAt: number;
   device: string;
   ip: string;
+  location: string;
   active: boolean;
   current: boolean;
 };
@@ -80,7 +81,7 @@ export default function AdminSessionsModal() {
           {sessions.length ? sessions.map((session) => (
             <article className={`session-item ${session.current ? "is-current" : ""} ${session.active ? "" : "is-ended"}`} key={session.id}>
               <div className="session-device"><span className="session-status-dot" /><strong>{session.device}</strong>{session.current && <em>Thiết bị này</em>}</div>
-              <div className="session-details"><span>Đăng nhập: {formatDate(session.createdAt)}</span><span>Hoạt động: {formatDate(session.lastSeenAt)}</span><span>IP: {session.ip}</span></div>
+              <div className="session-details"><span>Đăng nhập: {formatDate(session.createdAt)}</span><span>Hoạt động: {formatDate(session.lastSeenAt)}</span><span>IP: {session.ip}</span><span>Vị trí: {session.location}</span></div>
               <div className="session-actions">{session.active ? <span className="session-state">Đang hoạt động</span> : <span className="session-state">Đã đăng xuất</span>}{!session.current && session.active && <button type="button" onClick={() => void signOut(session)}>Đăng xuất</button>}</div>
             </article>
           )) : <p className="save-status">Chưa có lịch sử đăng nhập.</p>}

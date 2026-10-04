@@ -274,6 +274,9 @@ button { color: inherit; }
 .session-state { color: #77e6a8; font-size: 11px; }
 .session-item.is-ended .session-state { color: #a99aaa; }
 .session-actions button { padding: 7px 10px; border: 1px solid #ff668355; border-radius: 8px; color: #ff9cbe; background: #ff3c9312; cursor: pointer; font-size: 11px; }
+.password-option { display: flex; align-items: flex-start; gap: 9px; margin: 16px 0; padding: 11px 12px; border: 1px solid #ffffff18; border-radius: 11px; color: #e7dce9; background: #ffffff08; cursor: pointer; }
+.password-option input { margin-top: 3px; accent-color: #e93791; }
+.password-option span { display: grid; gap: 3px; font-size: 12px; }.password-option small { color: #a99aaa; font-size: 11px; line-height: 1.4; }
 @media (max-width: 760px) {
   .admin-header { position: relative; padding-right: 58px; }
   .admin-header .settings-menu-wrap { position: absolute; top: 0; right: 0; align-self: auto; }

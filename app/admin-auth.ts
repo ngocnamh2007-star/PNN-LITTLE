@@ -21,6 +21,7 @@ type AdminSessionState = {
   expiresAt: number;
   device: string;
   ip: string;
+  location: string;
   revokedAt?: number;
 };
 
@@ -47,6 +48,18 @@ function requestIp(request?: Request) {
     || request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
     || request.headers.get("x-real-ip")
     || "Không xác định";
+}
+
+function requestLocation(request?: Request) {
+  if (!request) return "Không xác định";
+  const decode = (value: string | null) => {
+    if (!value) return "";
+    try { return decodeURIComponent(value); } catch { return value; }
+  };
+  const city = decode(request.headers.get("cf-ipcity"));
+  const region = decode(request.headers.get("cf-region"));
+  const country = decode(request.headers.get("cf-ipcountry"));
+  return [city, region, country].filter(Boolean).join(", ") || "Không xác định";
 }
 
 function deviceName(userAgent: string) {
@@ -209,6 +222,7 @@ export async function createAdminSessionFor(username = "admin", request?: Reques
     expiresAt: now + SESSION_TTL,
     device: deviceName(request?.headers.get("user-agent") || ""),
     ip: requestIp(request),
+    location: requestLocation(request),
   };
   await writeState(`${SESSION_PREFIX}${token}`, session);
   const sessions = (await readSessionIndex(cleanUsername)).filter((item) => item.expiresAt > now - SESSION_TTL);
@@ -268,6 +282,7 @@ export async function adminSessionFromRequest(request: Request) {
     expiresAt: stored.expiresAt || Date.now() + SESSION_TTL,
     device: stored.device || "Thiết bị cũ",
     ip: stored.ip || "Không xác định",
+    location: stored.location || "Không xác định",
   };
   await writeState(`${SESSION_PREFIX}${token}`, migrated);
   const sessions = await readSessionIndex(migrated.username);
@@ -339,6 +354,20 @@ export async function updateAdminSessionPassword(username: string, sessionId: st
   const current = await readState<AdminSessionState>(`${SESSION_PREFIX}${target.token}`);
   if (current) await writeState(`${SESSION_PREFIX}${target.token}`, { ...current, passwordHash });
   return true;
+}
+
+export async function updateAllAdminSessionPasswords(username: string, passwordHash: string) {
+  const sessions = await readSessionIndex(username);
+  let changed = false;
+  for (const session of sessions) {
+    if (session.revokedAt || session.expiresAt <= Date.now()) continue;
+    session.passwordHash = passwordHash;
+    changed = true;
+    const current = await readState<AdminSessionState>(`${SESSION_PREFIX}${session.token}`);
+    if (current) await writeState(`${SESSION_PREFIX}${session.token}`, { ...current, passwordHash });
+  }
+  if (changed) await writeSessionIndex(username, sessions);
+  return changed;
 }
 
 export function scopedStateKey(base: string, username: string | null | undefined) {
