@@ -589,15 +589,15 @@ export default function AdminPage() {
           <div className="password-grid">
             <label className="admin-field">
               <span>Mật khẩu hiện tại</span>
-              <div className="password-input-wrap"><input type={showPasswords ? "text" : "password"} value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} /><button type="button" onClick={() => setShowPasswords((value) => !value)} aria-label="Hiện hoặc ẩn mật khẩu">👁</button></div>
+              <div className="password-input-wrap"><input type={showPasswords ? "text" : "password"} value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} /><button type="button" onClick={() => setShowPasswords((value) => !value)} aria-label={showPasswords ? "Ẩn mật khẩu" : "Hiện mật khẩu"}>{showPasswords ? "◉" : "◌"}</button></div>
             </label>
             <label className="admin-field">
               <span>Mật khẩu mới</span>
-              <div className="password-input-wrap"><input type={showPasswords ? "text" : "password"} value={newPassword} onChange={(event) => setNewPassword(event.target.value)} /><button type="button" onClick={() => setShowPasswords((value) => !value)} aria-label="Hiện hoặc ẩn mật khẩu">👁</button></div>
+              <div className="password-input-wrap"><input type={showPasswords ? "text" : "password"} value={newPassword} onChange={(event) => setNewPassword(event.target.value)} /><button type="button" onClick={() => setShowPasswords((value) => !value)} aria-label={showPasswords ? "Ẩn mật khẩu" : "Hiện mật khẩu"}>{showPasswords ? "◉" : "◌"}</button></div>
             </label>
             <label className="admin-field">
               <span>Nhập lại mật khẩu mới</span>
-              <div className="password-input-wrap"><input type={showPasswords ? "text" : "password"} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} /><button type="button" onClick={() => setShowPasswords((value) => !value)} aria-label="Hiện hoặc ẩn mật khẩu">👁</button></div>
+              <div className="password-input-wrap"><input type={showPasswords ? "text" : "password"} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} /><button type="button" onClick={() => setShowPasswords((value) => !value)} aria-label={showPasswords ? "Ẩn mật khẩu" : "Hiện mật khẩu"}>{showPasswords ? "◉" : "◌"}</button></div>
             </label>
           </div>
           <div className="security-actions">
