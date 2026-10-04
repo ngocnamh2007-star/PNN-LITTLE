@@ -346,9 +346,20 @@ export default function AdminPage() {
         context.bezierCurveTo(x + size - 155, y - 5, x + size + 10, y + 35, x + size + 10, y + 180);
         context.bezierCurveTo(x + size + 10, y + 325, 420, y + 485, 360, y + 545);
         context.fill();
+        context.save();
+        context.beginPath();
+        context.moveTo(360, y + 545);
+        context.bezierCurveTo(300, y + 485, x - 10, y + 325, x - 10, y + 180);
+        context.bezierCurveTo(x - 10, y + 35, x + 155, y - 5, 360, y + 150);
+        context.bezierCurveTo(x + size - 155, y - 5, x + size + 10, y + 35, x + size + 10, y + 180);
+        context.bezierCurveTo(x + size + 10, y + 325, 420, y + 485, 360, y + 545);
+        context.clip();
+        context.fillStyle = "#151019";
+        for (let row = 0; row < 22; row += 1) for (let column = 0; column < 22; column += 1) if ((row * 11 + column * 7) % 5 < 2) context.fillRect(78 + column * 27, 152 + row * 24, 18, 16);
+        context.restore();
         context.fillStyle = "#fff7fc";
-        context.fillRect(120, 190, 480, 480);
-        context.drawImage(image, 120, 190, 480, 480);
+        context.fillRect(150, 220, 420, 420);
+        context.drawImage(image, 150, 220, 420, 420);
       } else {
         context.drawImage(image, x, y, size, size);
       }
