@@ -246,10 +246,12 @@ button { color: inherit; }
 .reset-button { border: 1px solid #ffffff25; color: #bdaec1; background: transparent; }
 .save-button { min-width: 150px; border: 0; color: white; background: linear-gradient(90deg, #f02b86, #9731df); box-shadow: 0 10px 28px #c31d7e55; }
 .save-status { color: #cfbcd4; font-size: 12px; }
+.share-link { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }.qr-tools { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; width: 100%; margin-top: 10px; padding: 14px; border: 1px solid #ffffff18; border-radius: 14px; background: #ffffff08; }.qr-tools label { display: grid; gap: 6px; color: #cdbfd0; font-size: 12px; font-weight: 700; }.qr-tools select { min-width: 130px; padding: 9px; border: 1px solid #ffffff25; border-radius: 8px; color: white; background: #0d0a10; }.qr-preview { display: grid; place-items: center; width: 118px; height: 118px; padding: 8px; background: white; }.qr-preview img { display: block; width: 100%; height: 100%; }.qr-heart { border-radius: 45% 45% 45% 0; transform: rotate(-45deg); }.qr-heart img { transform: rotate(45deg) scale(.82); }.qr-download { padding: 9px 13px; border-radius: 9px; color: white; background: linear-gradient(90deg, #f02b86, #9731df); text-decoration: none; font-size: 12px; font-weight: 800; }
 
 @keyframes drift { to { transform: translate(8%, -6%) rotate(18deg) scale(1.12); } }
 @keyframes beat { 50% { transform: scale(1.28); } }
 .admin-page > .admin-header > button { display: none; }
+.settings-menu { gap: 4px; }
 .security-panel { display: none; }
 @keyframes load { from { width: 4%; } to { width: 100%; } }
 @keyframes stars { to { background-position: 0 580px; } }

@@ -12,6 +12,7 @@ import {
   saveConfig,
   saveRemoteConfig,
 } from "../site-config";
+import QRCode from "qrcode";
 
 function compressPhoto(source: File | string): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -63,6 +64,9 @@ export default function AdminPage() {
   const [selection, setSelection] = useState<GiftSelection | null>(null);
   const [status, setStatus] = useState("");
   const [shareLink, setShareLink] = useState("");
+  const [qrStyle, setQrStyle] = useState<"square" | "heart">("square");
+  const [showQr, setShowQr] = useState(false);
+  const [qrData, setQrData] = useState("");
   const [accountName, setAccountName] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -305,6 +309,12 @@ export default function AdminPage() {
     setConfig(defaultConfig);
     saveConfig(defaultConfig);
     setStatus("Đã khôi phục nội dung ban đầu");
+  }
+
+  async function createQr() {
+    if (!shareLink) return;
+    setQrData(await QRCode.toDataURL(shareLink, { width: 640, margin: 2, errorCorrectionLevel: "H" }));
+    setShowQr(true);
   }
 
   return (
@@ -611,7 +621,6 @@ export default function AdminPage() {
       </div>
 
       <footer className="admin-actions">
-        <button className="reset-button" type="button" onClick={resetAll}>Khôi phục ban đầu</button>
         <div>
           {status && <span className="save-status">{status}</span>}
           <button className="save-button" type="button" onClick={persist}>Lưu thay đổi</button>
@@ -619,7 +628,9 @@ export default function AdminPage() {
         {shareLink && (
           <div className="share-link">
             <input readOnly value={shareLink} aria-label="Link gửi người nhận" />
-            <button type="button" onClick={() => void navigator.clipboard?.writeText(shareLink)}>Sao chép link</button>
+            <button type="button" onClick={async () => { await navigator.clipboard?.writeText(shareLink); setStatus("Link đã được sao chép"); }}>Sao chép link</button>
+            <button type="button" onClick={() => void createQr()}>Tạo mã QR</button>
+            {showQr && qrData && <div className="qr-tools"><label>Kiểu mã QR<select value={qrStyle} onChange={(event) => setQrStyle(event.target.value as "square" | "heart")}><option value="square">Hình vuông</option><option value="heart">Hình trái tim</option></select></label><div className={`qr-preview qr-${qrStyle}`}><img src={qrData} alt="Mã QR link quà" /></div><a className="qr-download" href={qrData} download={`pnn-little-qr-${qrStyle}.png`}>Tải mã QR</a></div>}
           </div>
         )}
       </footer>
