@@ -358,8 +358,8 @@ export default function AdminPage() {
         for (let row = 0; row < 22; row += 1) for (let column = 0; column < 22; column += 1) if ((row * 11 + column * 7) % 5 < 2) context.fillRect(78 + column * 27, 152 + row * 24, 18, 16);
         context.restore();
         context.fillStyle = "#fff7fc";
-        context.fillRect(150, 220, 420, 420);
-        context.drawImage(image, 150, 220, 420, 420);
+        context.fillRect(230, 300, 260, 260);
+        context.drawImage(image, 230, 300, 260, 260);
       } else {
         context.drawImage(image, x, y, size, size);
       }
