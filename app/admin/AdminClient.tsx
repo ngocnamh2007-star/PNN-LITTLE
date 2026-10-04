@@ -67,6 +67,7 @@ export default function AdminPage() {
   const [qrStyle, setQrStyle] = useState<"square" | "heart">("square");
   const [showQr, setShowQr] = useState(false);
   const [qrData, setQrData] = useState("");
+  const [qrDownloadData, setQrDownloadData] = useState("");
   const [accountName, setAccountName] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -316,6 +317,42 @@ export default function AdminPage() {
     setQrData(await QRCode.toDataURL(shareLink, { width: 640, margin: 2, errorCorrectionLevel: "H", color: { dark: "#ff4f9f", light: "#120b18" } }));
     setShowQr(true);
   }
+
+  useEffect(() => {
+    if (!qrData) return;
+    const image = new Image();
+    image.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 720;
+      canvas.height = 820;
+      const context = canvas.getContext("2d");
+      if (!context) return;
+      const gradient = context.createLinearGradient(0, 0, 720, 820);
+      gradient.addColorStop(0, "#120b18");
+      gradient.addColorStop(1, "#3b103a");
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, 720, 820);
+      context.fillStyle = "#ff8fc7";
+      context.font = "700 30px sans-serif";
+      context.textAlign = "center";
+      context.fillText("PNN-LITTLE", 360, 72);
+      const x = 80, y = 140, size = 560;
+      if (qrStyle === "heart") {
+        context.save();
+        context.beginPath();
+        context.moveTo(360, y + 500);
+        context.bezierCurveTo(310, y + 450, x, y + 300, x, y + 170);
+        context.bezierCurveTo(x, y + 45, x + 150, y + 5, 360, y + 145);
+        context.bezierCurveTo(x + 410, y + 5, x + size, y + 45, x + size, y + 170);
+        context.bezierCurveTo(x + size, y + 300, 410, y + 450, 360, y + 500);
+        context.clip();
+      }
+      context.drawImage(image, x, y, size, size);
+      if (qrStyle === "heart") context.restore();
+      setQrDownloadData(canvas.toDataURL("image/png"));
+    };
+    image.src = qrData;
+  }, [qrData, qrStyle]);
 
   return (
     <main className="admin-page">
@@ -630,7 +667,7 @@ export default function AdminPage() {
             <input readOnly value={shareLink} aria-label="Link gửi người nhận" />
             <button type="button" onClick={async () => { await navigator.clipboard?.writeText(shareLink); setStatus("Link đã được sao chép"); }}>Sao chép link</button>
             <button type="button" onClick={() => void createQr()}>Tạo mã QR</button>
-            {showQr && qrData && <div className="qr-tools"><label>Kiểu mã QR<select value={qrStyle} onChange={(event) => setQrStyle(event.target.value as "square" | "heart")}><option value="square">Hình vuông</option><option value="heart">Hình trái tim</option></select></label><div className="qr-card"><strong>PNN-LITTLE</strong><div className={`qr-preview qr-${qrStyle}`}><img src={qrData} alt="Mã QR link quà" /></div></div><a className="qr-download" href={qrData} download={`pnn-little-qr-${qrStyle}.png`}>Tải mã QR</a></div>}
+            {showQr && qrData && <div className="qr-tools"><label>Kiểu mã QR<select value={qrStyle} onChange={(event) => setQrStyle(event.target.value as "square" | "heart")}><option value="square">Hình vuông</option><option value="heart">Hình trái tim</option></select></label><div className="qr-card"><strong>PNN-LITTLE</strong><div className={`qr-preview qr-${qrStyle}`}><img src={qrData} alt="Mã QR link quà" /></div></div><a className="qr-download" href={qrDownloadData || qrData} download={`pnn-little-qr-${qrStyle}.png`}>Tải mã QR</a></div>}
           </div>
         )}
       </footer>
