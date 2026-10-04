@@ -8,6 +8,7 @@ const ACCOUNT_KEY = "admin-accounts";
 const SESSION_PREFIX = "admin-session:";
 const SESSION_INDEX_PREFIX = "admin-sessions:";
 const SESSION_TTL = 1000 * 60 * 60 * 24 * 14;
+const OWNER_SESSION_INDEX_KEY = "owner-sessions";
 export const SESSION_COOKIE = "pnn_admin_session";
 export const OWNER_COOKIE = "pnn_owner_session";
 
@@ -15,6 +16,19 @@ type AdminSessionState = {
   id: string;
   token: string;
   username: string;
+  passwordHash: string;
+  createdAt: number;
+  lastSeenAt: number;
+  expiresAt: number;
+  device: string;
+  ip: string;
+  location: string;
+  revokedAt?: number;
+};
+
+type OwnerSessionState = {
+  id: string;
+  token: string;
   passwordHash: string;
   createdAt: number;
   lastSeenAt: number;
@@ -178,6 +192,10 @@ export async function changeAdminPasswordFor(username: string, password: string)
   return passwordHash;
 }
 
+async function ownerPasswordHash() {
+  return (await readState<string>("owner-password-hash")) ?? (await hashPassword(secret("ADMIN_PASSWORD")));
+}
+
 export async function verifyOwnerPassword(password: string) {
   const stored = await readState<string>("owner-password-hash");
   if (stored) return (await hashPassword(password)) === stored;
@@ -185,19 +203,135 @@ export async function verifyOwnerPassword(password: string) {
   return Boolean(expected) && password === expected;
 }
 
-export async function changeOwnerPassword(password: string) { if (password.length < 8) return false; await writeState("owner-password-hash", await hashPassword(password)); return true; }
+export async function changeOwnerPassword(password: string) { if (password.length < 8) return null; const passwordHash = await hashPassword(password); await writeState("owner-password-hash", passwordHash); return passwordHash; }
 
-export async function createOwnerSession() {
+function ownerTokenFromRequest(request: Request) {
+  return request.headers.get("cookie")?.split(";").map((v) => v.trim()).find((v) => v.startsWith(`${OWNER_COOKIE}=`))?.split("=")[1];
+}
+
+async function readOwnerSessionIndex() {
+  return (await readState<OwnerSessionState[]>(OWNER_SESSION_INDEX_KEY)) ?? [];
+}
+
+async function writeOwnerSessionIndex(sessions: OwnerSessionState[]) {
+  await writeState(OWNER_SESSION_INDEX_KEY, sessions.slice(-40));
+}
+
+export async function createOwnerSession(request?: Request) {
   const token = crypto.randomUUID();
-  await writeState(`owner-session:${token}`, { expiresAt: Date.now() + 1000 * 60 * 60 * 8 });
+  const now = Date.now();
+  const session: OwnerSessionState = {
+    id: crypto.randomUUID(),
+    token,
+    passwordHash: await ownerPasswordHash(),
+    createdAt: now,
+    lastSeenAt: now,
+    expiresAt: now + 1000 * 60 * 60 * 8,
+    device: deviceName(request?.headers.get("user-agent") || ""),
+    ip: requestIp(request),
+    location: requestLocation(request),
+  };
+  await writeState(`owner-session:${token}`, session);
+  const sessions = (await readOwnerSessionIndex()).filter((item) => item.expiresAt > now - 1000 * 60 * 60 * 8);
+  sessions.push(session);
+  await writeOwnerSessionIndex(sessions);
   return token;
 }
 
 export async function isOwnerRequest(request: Request) {
-  const token = request.headers.get("cookie")?.split(";").map((v) => v.trim()).find((v) => v.startsWith(`${OWNER_COOKIE}=`))?.split("=")[1];
+  const token = ownerTokenFromRequest(request);
   if (!token) return false;
-  const session = await readState<{ expiresAt: number }>(`owner-session:${token}`);
-  return Boolean(session && session.expiresAt > Date.now());
+  const session = await readState<Partial<OwnerSessionState>>(`owner-session:${token}`);
+  if (!session || (session.expiresAt || 0) <= Date.now() || session.revokedAt) return false;
+  if (session.passwordHash && session.passwordHash !== await ownerPasswordHash()) return false;
+  return true;
+}
+
+export async function ownerSessionFromRequest(request: Request) {
+  const token = ownerTokenFromRequest(request);
+  if (!token || !(await isOwnerRequest(request))) return null;
+  const stored = await readState<Partial<OwnerSessionState>>(`owner-session:${token}`);
+  if (!stored) return null;
+  if (stored.id && stored.token && stored.location !== undefined) return stored as OwnerSessionState;
+  const migrated: OwnerSessionState = {
+    id: stored.id || crypto.randomUUID(),
+    token,
+    passwordHash: stored.passwordHash || await ownerPasswordHash(),
+    createdAt: stored.createdAt || Date.now(),
+    lastSeenAt: stored.lastSeenAt || Date.now(),
+    expiresAt: stored.expiresAt || Date.now() + 1000 * 60 * 60 * 8,
+    device: stored.device || "Thiết bị cũ",
+    ip: stored.ip || "Không xác định",
+    location: stored.location || "Không xác định",
+  };
+  await writeState(`owner-session:${token}`, migrated);
+  const sessions = await readOwnerSessionIndex();
+  if (!sessions.some((item) => item.id === migrated.id)) { sessions.push(migrated); await writeOwnerSessionIndex(sessions); }
+  return migrated;
+}
+
+export async function touchOwnerSession(request: Request) {
+  const session = await ownerSessionFromRequest(request);
+  if (!session || Date.now() - session.lastSeenAt < 60_000) return session;
+  const updated = { ...session, lastSeenAt: Date.now() };
+  await writeState(`owner-session:${session.token}`, updated);
+  const sessions = await readOwnerSessionIndex();
+  await writeOwnerSessionIndex(sessions.map((item) => item.id === session.id ? updated : item));
+  return updated;
+}
+
+export async function listOwnerSessions() { return readOwnerSessionIndex(); }
+
+export async function ownerSessionIsActive(session: OwnerSessionState) {
+  return !session.revokedAt && session.expiresAt > Date.now() && isOwnerRequest(new Request("https://session.local", { headers: { cookie: `${OWNER_COOKIE}=${session.token}` } }));
+}
+
+export async function revokeOwnerSession(sessionId: string) {
+  const sessions = await readOwnerSessionIndex();
+  const target = sessions.find((session) => session.id === sessionId);
+  if (!target) return false;
+  target.revokedAt = Date.now();
+  await writeOwnerSessionIndex(sessions);
+  await deleteState(`owner-session:${target.token}`);
+  return true;
+}
+
+export async function revokeAllOwnerSessions(exceptSessionId?: string) {
+  const sessions = await readOwnerSessionIndex();
+  let changed = false;
+  for (const session of sessions) {
+    if (session.id === exceptSessionId || session.revokedAt) continue;
+    session.revokedAt = Date.now();
+    changed = true;
+    await deleteState(`owner-session:${session.token}`);
+  }
+  if (changed) await writeOwnerSessionIndex(sessions);
+  return changed;
+}
+
+export async function updateOwnerSessionPassword(sessionId: string, passwordHash: string) {
+  const sessions = await readOwnerSessionIndex();
+  const target = sessions.find((session) => session.id === sessionId);
+  if (!target) return false;
+  target.passwordHash = passwordHash;
+  await writeOwnerSessionIndex(sessions);
+  const current = await readState<OwnerSessionState>(`owner-session:${target.token}`);
+  if (current) await writeState(`owner-session:${target.token}`, { ...current, passwordHash });
+  return true;
+}
+
+export async function updateAllOwnerSessionPasswords(passwordHash: string) {
+  const sessions = await readOwnerSessionIndex();
+  let changed = false;
+  for (const session of sessions) {
+    if (session.revokedAt || session.expiresAt <= Date.now()) continue;
+    session.passwordHash = passwordHash;
+    changed = true;
+    const current = await readState<OwnerSessionState>(`owner-session:${session.token}`);
+    if (current) await writeState(`owner-session:${session.token}`, { ...current, passwordHash });
+  }
+  if (changed) await writeOwnerSessionIndex(sessions);
+  return changed;
 }
 
 export async function changePassword(password: string) {
