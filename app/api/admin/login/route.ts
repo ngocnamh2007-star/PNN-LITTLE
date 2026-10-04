@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   if (!payload.password || !(await verifyAdminCredentials(payload.username || "admin", payload.password))) {
     return Response.json({ error: "Mật khẩu không đúng" }, { status: 401 });
   }
-  const token = await createAdminSessionFor(payload.username || "admin");
+  const token = await createAdminSessionFor(payload.username || "admin", request);
   return new Response(JSON.stringify({ ok: true }), {
     headers: {
       "content-type": "application/json",

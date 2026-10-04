@@ -1,8 +1,8 @@
-import { adminUsernameFromRequest, isAdminRequest } from "../../../admin-auth";
+import { adminSessionFailureCode, adminSessionFromRequest, touchAdminSession } from "../../../admin-auth";
 
 export async function GET(request: Request) {
-  if (!(await isAdminRequest(request))) return Response.json({ error: "Unauthorized" }, { status: 401 });
-  const username = await adminUsernameFromRequest(request);
-  if (!username) return Response.json({ error: "Unauthorized" }, { status: 401 });
-  return Response.json({ username });
+  const session = await adminSessionFromRequest(request);
+  if (!session) return Response.json({ error: "Phiên đăng nhập đã bị hủy", code: await adminSessionFailureCode(request) }, { status: 401 });
+  const touched = await touchAdminSession(request);
+  return Response.json({ username: touched?.username || session.username, sessionId: touched?.id || session.id });
 }

@@ -260,9 +260,28 @@ button { color: inherit; }
 .qr-preview-composite { width: 190px; height: 216px; padding: 0; border: 0; background: transparent; }.qr-preview-composite img { width: 100%; height: 100%; object-fit: contain; }
 .qr-card { display: grid; gap: 8px; justify-items: center; padding: 14px; border: 1px solid #ff4f9f88; border-radius: 16px; color: #ff8fc7; background: #120b18aa; backdrop-filter: blur(18px); font-size: 14px; font-weight: 900; letter-spacing: .16em; text-shadow: 0 0 14px #ff2f91; }.qr-preview { background: #fff7fc; }.qr-square { border: 5px solid #ff2f91; border-radius: 12px; }.qr-preview-composite { border: 3px solid #ff2f91; box-shadow: 0 0 24px #ff2f9188; }
 .security-panel { display: none; }
+.session-modal { width: min(680px, 100%); max-height: min(760px, calc(100svh - 40px)); overflow-y: auto; }
+.session-list { display: grid; gap: 10px; margin-top: 18px; }
+.session-item { display: grid; gap: 8px; padding: 13px; border: 1px solid #ffffff16; border-radius: 13px; background: #0d0a10; }
+.session-item.is-current { border-color: #ff5ca866; background: #ff3c9310; }
+.session-item.is-ended { opacity: .62; }
+.session-device { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; color: #f1e5f2; }
+.session-device em { padding: 3px 7px; border-radius: 999px; color: #ff9dcc; background: #ff3c9320; font-size: 10px; font-style: normal; }
+.session-status-dot { width: 8px; height: 8px; border-radius: 50%; background: #3de58b; box-shadow: 0 0 9px #3de58b; }
+.session-item.is-ended .session-status-dot { background: #807582; box-shadow: none; }
+.session-details { display: grid; gap: 3px; color: #a99aaa; font-size: 11px; }
+.session-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.session-state { color: #77e6a8; font-size: 11px; }
+.session-item.is-ended .session-state { color: #a99aaa; }
+.session-actions button { padding: 7px 10px; border: 1px solid #ff668355; border-radius: 8px; color: #ff9cbe; background: #ff3c9312; cursor: pointer; font-size: 11px; }
 @media (max-width: 760px) {
   .admin-header { position: relative; padding-right: 58px; }
   .admin-header .settings-menu-wrap { position: absolute; top: 0; right: 0; align-self: auto; }
+}
+@media (max-width: 560px) {
+  .session-modal { padding: 22px 16px; }
+  .session-details { font-size: 10px; }
+  .session-actions { align-items: flex-start; flex-direction: column; }
 }
 @media (max-width: 700px) {
   .settings-menu-wrap .settings-menu, .owner-settings-menu-wrap .settings-menu { position: absolute; top: 54px; left: auto; right: 0; width: min(280px, calc(100vw - 32px)); min-width: 0; max-width: none; max-height: calc(100svh - 96px); overflow-y: auto; }

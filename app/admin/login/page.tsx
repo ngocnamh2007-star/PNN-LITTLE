@@ -10,7 +10,7 @@ export default function AdminLoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [info, setInfo] = useState<{ intro: string; contact: string; address: string; phone: string; facebook: string; twitter: string; socialLinks: string }>({ intro: "", contact: "", address: "", phone: "", facebook: "", twitter: "", socialLinks: "" });
-  useEffect(() => { const params = new URLSearchParams(window.location.search); if (params.get("mode") === "signup") setMode("signup"); if (params.get("locked") === "1") setError("Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên."); }, []);
+  useEffect(() => { const params = new URLSearchParams(window.location.search); if (params.get("mode") === "signup") setMode("signup"); if (params.get("locked") === "1") setError("Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên."); if (params.get("session") === "revoked") setError("Tài khoản đã bị đăng xuất trên thiết bị này."); }, []);
   useEffect(() => { void fetch("/api/site-info").then((r) => r.json()).then((data) => setInfo(data.info)); }, []);
 
   async function submit(event: FormEvent) {
