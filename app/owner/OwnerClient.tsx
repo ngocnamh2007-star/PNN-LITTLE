@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 type Account = { username: string; email: string; disabled: boolean };
 type Social = { id: number; name: string; url: string };
 type Info = Record<string, string>;
-type EmailConfig = { provider: "resend"; from: string; hasApiKey: boolean };
+type EmailConfig = { provider: "resend" | "emailjs"; from: string; hasApiKey: boolean; serviceId: string; templateId: string; publicKey: string; hasPrivateKey: boolean };
 
 const empty: Info = {
   intro: "", contact: "", address: "", phone: "", facebook: "", twitter: "", socialLinks: "", links: "",
@@ -19,8 +19,13 @@ export default function OwnerClient() {
   const [info, setInfo] = useState<Info>(empty);
   const [socials, setSocials] = useState<Social[]>([]);
   const [message, setMessage] = useState("");
-  const [emailConfig, setEmailConfig] = useState<EmailConfig>({ provider: "resend", from: "", hasApiKey: false });
+  const [emailConfig, setEmailConfig] = useState<EmailConfig>({ provider: "resend", from: "", hasApiKey: false, serviceId: "", templateId: "", publicKey: "", hasPrivateKey: false });
   const [emailApiKey, setEmailApiKey] = useState("");
+  const [emailServiceId, setEmailServiceId] = useState("");
+  const [emailTemplateId, setEmailTemplateId] = useState("");
+  const [emailPublicKey, setEmailPublicKey] = useState("");
+  const [emailPrivateKey, setEmailPrivateKey] = useState("");
+  const [showEmailPrivateKey, setShowEmailPrivateKey] = useState(false);
   const [testEmail, setTestEmail] = useState("");
   const [emailMessage, setEmailMessage] = useState("");
   const [emailSaving, setEmailSaving] = useState(false);
@@ -47,7 +52,13 @@ export default function OwnerClient() {
         return { id, name: name.trim(), url: parts.join("|").trim() };
       }).filter((social) => social.name));
     }
-    if (emailResponse.ok) setEmailConfig(((await emailResponse.json()) as { config: EmailConfig }).config);
+    if (emailResponse.ok) {
+      const config = ((await emailResponse.json()) as { config: EmailConfig }).config;
+      setEmailConfig(config);
+      setEmailServiceId(config.serviceId || "");
+      setEmailTemplateId(config.templateId || "");
+      setEmailPublicKey(config.publicKey || "");
+    }
   }
 
   useEffect(() => {
@@ -74,12 +85,16 @@ export default function OwnerClient() {
     const response = await fetch("/api/owner/email-config", {
       method: "PUT",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ provider: emailConfig.provider, from: emailConfig.from, apiKey: emailApiKey || undefined }),
+      body: JSON.stringify({ provider: emailConfig.provider, from: emailConfig.from, apiKey: emailApiKey || undefined, serviceId: emailServiceId || undefined, templateId: emailTemplateId || undefined, publicKey: emailPublicKey || undefined, privateKey: emailPrivateKey || undefined }),
     });
     const data = (await response.json().catch(() => ({}))) as { config?: EmailConfig; error?: string };
     if (response.ok && data.config) {
       setEmailConfig(data.config);
       setEmailApiKey("");
+      setEmailPrivateKey("");
+      setEmailServiceId(data.config.serviceId || "");
+      setEmailTemplateId(data.config.templateId || "");
+      setEmailPublicKey(data.config.publicKey || "");
       setEmailMessage("Đã lưu cấu hình email. API key được bảo mật và không hiển thị lại.");
     } else setEmailMessage(data.error || "Không thể lưu cấu hình email");
     setEmailSaving(false);
@@ -130,10 +145,16 @@ export default function OwnerClient() {
 
     <section className="admin-panel owner-accounts email-config-panel">
       <h2>Thiết lập email khôi phục mật khẩu</h2>
-      <p className="panel-note">Cài đặt một lần tại đây để khách hàng nhận mật khẩu tạm thời khi bấm “Quên mật khẩu?”.</p>
-      <label className="admin-field"><span>Dịch vụ gửi email</span><select value={emailConfig.provider} onChange={(event) => setEmailConfig({ ...emailConfig, provider: event.target.value as "resend" })}><option value="resend">Resend</option></select></label>
-      <label className="admin-field"><span>API key Resend</span><div className="password-input-wrap"><input type={showEmailApiKey ? "text" : "password"} value={emailApiKey} onChange={(event) => setEmailApiKey(event.target.value)} placeholder={emailConfig.hasApiKey ? "Đã lưu — để trống nếu không đổi" : "re_..."} /><button type="button" aria-label={showEmailApiKey ? "Ẩn API key" : "Hiện API key"} onClick={() => setShowEmailApiKey(!showEmailApiKey)}>{showEmailApiKey ? "◉" : "◌"}</button></div></label>
-      <label className="admin-field"><span>Email người gửi</span><input type="text" value={emailConfig.from} onChange={(event) => setEmailConfig({ ...emailConfig, from: event.target.value })} placeholder="PNN-LITTLE <ban@tenmiencuaban.com>" /></label>
+      <p className="panel-note">Cài đặt một lần tại đây để khách hàng nhận mật khẩu tạm thời khi bấm “Quên mật khẩu?” hoặc khi bạn gửi email thủ công.</p>
+      <label className="admin-field"><span>Dịch vụ gửi email</span><select value={emailConfig.provider} onChange={(event) => setEmailConfig({ ...emailConfig, provider: event.target.value as "resend" | "emailjs" })}><option value="emailjs">EmailJS</option><option value="resend">Resend</option></select></label>
+      {emailConfig.provider === "emailjs" ? <>
+        <label className="admin-field"><span>EmailJS Service ID</span><input value={emailServiceId} onChange={(event) => setEmailServiceId(event.target.value)} placeholder="service_xxxxxxx" /></label>
+        <label className="admin-field"><span>EmailJS Template ID</span><input value={emailTemplateId} onChange={(event) => setEmailTemplateId(event.target.value)} placeholder="template_xxxxxxx" /></label>
+        <label className="admin-field"><span>EmailJS Public Key</span><input value={emailPublicKey} onChange={(event) => setEmailPublicKey(event.target.value)} placeholder="Public key trong Account" /></label>
+        <label className="admin-field"><span>EmailJS Private Key</span><div className="password-input-wrap"><input type={showEmailPrivateKey ? "text" : "password"} value={emailPrivateKey} onChange={(event) => setEmailPrivateKey(event.target.value)} placeholder={emailConfig.hasPrivateKey ? "Đã lưu — để trống nếu không đổi" : "Private key trong Account > Security"} /><button type="button" aria-label={showEmailPrivateKey ? "Ẩn private key" : "Hiện private key"} onClick={() => setShowEmailPrivateKey(!showEmailPrivateKey)}>{showEmailPrivateKey ? "◉" : "◌"}</button></div></label>
+        <p className="panel-note">Trong template EmailJS, đặt To Email = <code>&#123;&#123;to_email&#125;&#125;</code>, Subject = <code>&#123;&#123;subject&#125;&#125;</code>, nội dung = <code>&#123;&#123;message&#125;&#125;</code>; email quên mật khẩu dùng thêm <code>&#123;&#123;temporary_password&#125;&#125;</code>.</p>
+      </> : <label className="admin-field"><span>API key Resend</span><div className="password-input-wrap"><input type={showEmailApiKey ? "text" : "password"} value={emailApiKey} onChange={(event) => setEmailApiKey(event.target.value)} placeholder={emailConfig.hasApiKey ? "Đã lưu — để trống nếu không đổi" : "re_..."} /><button type="button" aria-label={showEmailApiKey ? "Ẩn API key" : "Hiện API key"} onClick={() => setShowEmailApiKey(!showEmailApiKey)}>{showEmailApiKey ? "◉" : "◌"}</button></div></label>}
+      <label className="admin-field"><span>Email người gửi (Resend) / email mặc định của template (EmailJS)</span><input type="text" value={emailConfig.from} onChange={(event) => setEmailConfig({ ...emailConfig, from: event.target.value })} placeholder="PNN-LITTLE <hello@tenmiencuaban.com>" /></label>
       <label className="admin-field"><span>Email nhận thư kiểm tra</span><input type="email" value={testEmail} onChange={(event) => setTestEmail(event.target.value)} placeholder="Nhập email của bạn để thử gửi" /></label>
       <div className="email-config-actions"><button className="save-button" type="button" onClick={() => void saveEmailConfig()} disabled={emailSaving}>{emailSaving ? "Đang lưu..." : "Lưu cấu hình email"}</button><button className="reset-button" type="button" onClick={() => void sendTestEmail()} disabled={emailTesting}>{emailTesting ? "Đang gửi..." : "Gửi email kiểm tra"}</button></div>
       {emailMessage && <p className="save-status" aria-live="polite">{emailMessage}</p>}

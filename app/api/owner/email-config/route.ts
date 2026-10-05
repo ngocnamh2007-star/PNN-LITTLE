@@ -1,70 +1,30 @@
-import { env } from "cloudflare:workers";
 import { isOwnerRequest } from "../../../admin-auth";
-import { readState, writeState } from "../../state-store";
-
-const KEY = "email-config";
-const DEFAULT_FROM = "PNN-LITTLE <onboarding@resend.dev>";
-
-type EmailConfig = {
-  provider: "resend";
-  apiKey: string;
-  from: string;
-};
-
-function runtimeSecrets() {
-  const runtime = env as unknown as Record<string, unknown>;
-  return {
-    apiKey: typeof runtime.RESEND_API_KEY === "string" ? runtime.RESEND_API_KEY : "",
-    from: typeof runtime.RESET_EMAIL_FROM === "string" && runtime.RESET_EMAIL_FROM ? runtime.RESET_EMAIL_FROM : DEFAULT_FROM,
-  };
-}
-
-async function storedConfig(): Promise<EmailConfig> {
-  const saved = await readState<Partial<EmailConfig>>(KEY);
-  const secrets = runtimeSecrets();
-  return {
-    provider: "resend",
-    apiKey: saved?.apiKey || secrets.apiKey,
-    from: saved?.from || secrets.from,
-  };
-}
-
-function publicConfig(config: EmailConfig) {
-  return { provider: config.provider, from: config.from, hasApiKey: Boolean(config.apiKey) };
-}
-
-async function sendResendEmail(config: EmailConfig, to: string) {
-  if (!config.apiKey) return { ok: false, error: "Chưa có API key Resend" };
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { authorization: `Bearer ${config.apiKey}`, "content-type": "application/json" },
-    body: JSON.stringify({
-      from: config.from,
-      to: [to],
-      subject: "Email kiểm tra PNN-LITTLE",
-      html: "<div style=\"font-family:Arial,sans-serif;line-height:1.6;color:#231327\"><h2>PNN-LITTLE</h2><p>Email gửi thử đã hoạt động. Chức năng quên mật khẩu có thể gửi mật khẩu tạm thời tới khách hàng.</p></div>",
-    }),
-  });
-  const result = (await response.json().catch(() => ({}))) as { id?: string; message?: string; name?: string };
-  if (!response.ok) return { ok: false, error: result.message || "Resend từ chối email. Hãy kiểm tra API key, email người gửi và tên miền đã xác minh." };
-  return { ok: true, id: result.id || "" };
-}
+import { loadEmailConfig, publicEmailConfig, sendTransactionalEmail } from "../../email-service";
+import { writeState } from "../../state-store";
 
 export async function GET(request: Request) {
   if (!(await isOwnerRequest(request))) return Response.json({ error: "Unauthorized" }, { status: 401 });
-  return Response.json({ config: publicConfig(await storedConfig()) });
+  return Response.json({ config: publicEmailConfig(await loadEmailConfig()) });
 }
 
 export async function PUT(request: Request) {
   if (!(await isOwnerRequest(request))) return Response.json({ error: "Unauthorized" }, { status: 401 });
-  const payload = (await request.json().catch(() => ({}))) as { provider?: string; apiKey?: string; from?: string };
-  const current = await storedConfig();
+  const payload = (await request.json().catch(() => ({}))) as { provider?: string; from?: string; apiKey?: string; serviceId?: string; templateId?: string; publicKey?: string; privateKey?: string };
+  const current = await loadEmailConfig();
+  const provider = payload.provider === "emailjs" ? "emailjs" : "resend";
   const from = payload.from?.trim() || current.from;
-  if (payload.provider && payload.provider !== "resend") return Response.json({ error: "Hiện chỉ hỗ trợ Resend" }, { status: 400 });
-  if (!from) return Response.json({ error: "Vui lòng nhập email người gửi" }, { status: 400 });
-  const apiKey = payload.apiKey?.trim() || current.apiKey;
-  await writeState(KEY, { provider: "resend", apiKey, from });
-  return Response.json({ ok: true, config: publicConfig({ provider: "resend", apiKey, from }) });
+  const next = {
+    provider,
+    from,
+    apiKey: payload.apiKey?.trim() || current.apiKey,
+    serviceId: payload.serviceId?.trim() || current.serviceId,
+    templateId: payload.templateId?.trim() || current.templateId,
+    publicKey: payload.publicKey?.trim() || current.publicKey,
+    privateKey: payload.privateKey?.trim() || current.privateKey,
+  } as const;
+  if (provider === "resend" && !next.from) return Response.json({ error: "Vui lòng nhập email người gửi" }, { status: 400 });
+  await writeState("email-config", next);
+  return Response.json({ ok: true, config: publicEmailConfig(next) });
 }
 
 export async function POST(request: Request) {
@@ -72,7 +32,12 @@ export async function POST(request: Request) {
   const payload = (await request.json().catch(() => ({}))) as { to?: string };
   const to = payload.to?.trim().toLowerCase() || "";
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return Response.json({ error: "Vui lòng nhập email nhận thư hợp lệ" }, { status: 400 });
-  const result = await sendResendEmail(await storedConfig(), to);
+  const result = await sendTransactionalEmail(await loadEmailConfig(), {
+    to,
+    subject: "Email kiểm tra PNN-LITTLE",
+    text: "Email gửi thử đã hoạt động. Chức năng quên mật khẩu và gửi email cho khách hàng có thể sử dụng.",
+    html: "<div style=\"font-family:Arial,sans-serif;line-height:1.6;color:#231327\"><h2>PNN-LITTLE</h2><p>Email gửi thử đã hoạt động. Chức năng quên mật khẩu và gửi email cho khách hàng có thể sử dụng.</p></div>",
+  });
   if (!result.ok) return Response.json({ error: result.error }, { status: 502 });
-  return Response.json({ ok: true, message: result.id ? `Email kiểm tra đã được Resend tiếp nhận (mã ${result.id}). Hãy kiểm tra Inbox/Spam.` : "Email kiểm tra đã được Resend tiếp nhận. Hãy kiểm tra Inbox/Spam." });
+  return Response.json({ ok: true, message: result.id ? `Email kiểm tra đã được gửi (mã ${result.id}). Hãy kiểm tra Inbox/Spam.` : "Email kiểm tra đã được gửi." });
 }
