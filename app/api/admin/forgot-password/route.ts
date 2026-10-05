@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     to: account.email,
     subject: "Mật khẩu tạm thời cho PNN-LITTLE",
     text: `Mật khẩu tạm thời của bạn là: ${password}\n\nVui lòng đăng nhập lại và đổi mật khẩu mới ngay khi truy cập tài khoản. Nếu bạn không yêu cầu đặt lại mật khẩu, hãy liên hệ quản trị viên.`,
-    html: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#231327"><h2>PNN-LITTLE</h2><p>Mật khẩu tạm thời của bạn là:</p><p style="font-size:24px;font-weight:700;letter-spacing:4px">${password}</p><p>Vui lòng đăng nhập lại và đổi mật khẩu mới ngay khi truy cập tài khoản.</p><p>Nếu bạn không yêu cầu đặt lại mật khẩu, hãy liên hệ quản trị viên.</p></div>`,
+    html: `<div style="font-family:Arial,sans-serif;line-height:1.7;color:#fff1fb"><h2 style="margin:0 0 16px;color:#ffd1eb;font-size:24px">Mật khẩu tạm thời</h2><p style="margin:0 0 12px;color:#fff1fb">Mật khẩu tạm thời của bạn là:</p><p style="margin:18px 0;padding:14px 16px;border:1px solid #ff61ad88;border-radius:12px;background:#35133f;color:#ff8fc7;font-size:26px;font-weight:800;letter-spacing:5px;text-align:center">${password}</p><p style="margin:0 0 12px;color:#fff1fb">Vui lòng đăng nhập lại và đổi mật khẩu mới ngay khi truy cập tài khoản.</p><p style="margin:0;color:#e8c8df">Nếu bạn không yêu cầu đặt lại mật khẩu, hãy liên hệ quản trị viên.</p></div>`,
     params: { temporary_password: password, recipient_email: account.email },
   });
   if (!result.ok) return Response.json({ error: result.error || "Không thể gửi email lúc này. Vui lòng thử lại sau." }, { status: 502 });
