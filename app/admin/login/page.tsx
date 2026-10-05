@@ -38,12 +38,20 @@ export default function AdminLoginPage() {
 
   async function requestReset(event: FormEvent) {
     event.preventDefault();
+    if (forgotLoading) return;
     setForgotLoading(true);
     setForgotMessage("");
-    const response = await fetch("/api/admin/forgot-password", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: forgotEmail }) });
-    const payload = (await response.json()) as { message?: string; error?: string };
-    setForgotMessage(payload.message || payload.error || "Không thể gửi email lúc này");
-    setForgotLoading(false);
+    try {
+      const response = await fetch("/api/admin/forgot-password", { method: "POST", headers: { "content-type": "application/json", accept: "application/json" }, body: JSON.stringify({ email: forgotEmail.trim() }) });
+      const body = await response.text();
+      let payload: { message?: string; error?: string } = {};
+      try { payload = JSON.parse(body) as { message?: string; error?: string }; } catch { /* Worker/network errors may not return JSON. */ }
+      setForgotMessage(payload.message || payload.error || (response.ok ? "Yêu cầu đã được tiếp nhận. Hãy kiểm tra Inbox và Spam." : `Không thể gửi email (mã ${response.status}). Vui lòng thử lại.`));
+    } catch {
+      setForgotMessage("Không thể kết nối tới máy chủ gửi email. Vui lòng tải lại trang rồi thử lại.");
+    } finally {
+      setForgotLoading(false);
+    }
   }
 
   return (
