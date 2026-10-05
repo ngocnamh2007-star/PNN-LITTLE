@@ -39,7 +39,7 @@ export default function AdminLoginPage() {
   async function sendResetRequest() {
     if (forgotLoading) return;
     setForgotLoading(true);
-    setForgotMessage("");
+    setForgotMessage("Đang xử lý yêu cầu…");
     try {
       const response = await fetch("/api/admin/forgot-password", { method: "POST", headers: { "content-type": "application/json", accept: "application/json" }, body: JSON.stringify({ email: forgotEmail.trim() }) });
       const body = await response.text();
