@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-type Account = { username: string; disabled: boolean };
+type Account = { username: string; email: string; disabled: boolean };
 type Social = { id: number; name: string; url: string };
 type Info = Record<string, string>;
 type EmailConfig = { provider: "resend"; from: string; hasApiKey: boolean };
@@ -26,6 +26,11 @@ export default function OwnerClient() {
   const [emailSaving, setEmailSaving] = useState(false);
   const [emailTesting, setEmailTesting] = useState(false);
   const [showEmailApiKey, setShowEmailApiKey] = useState(false);
+  const [mailTo, setMailTo] = useState("");
+  const [mailSubject, setMailSubject] = useState("");
+  const [mailBody, setMailBody] = useState("");
+  const [mailMessage, setMailMessage] = useState("");
+  const [mailSending, setMailSending] = useState(false);
 
   async function load() {
     const [accountsResponse, infoResponse, emailResponse] = await Promise.all([
@@ -89,6 +94,15 @@ export default function OwnerClient() {
     setEmailTesting(false);
   }
 
+  async function sendCustomerEmail() {
+    setMailSending(true);
+    setMailMessage("");
+    const response = await fetch("/api/owner/email-send", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: mailTo, subject: mailSubject, message: mailBody }) });
+    const data = (await response.json().catch(() => ({}))) as { message?: string; error?: string };
+    setMailMessage(data.message || data.error || "Không thể gửi email");
+    setMailSending(false);
+  }
+
   async function accountAction(username: string, body: object) {
     await fetch("/api/owner/accounts", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ username, ...body }) });
     await load();
@@ -123,6 +137,16 @@ export default function OwnerClient() {
       <label className="admin-field"><span>Email nhận thư kiểm tra</span><input type="email" value={testEmail} onChange={(event) => setTestEmail(event.target.value)} placeholder="Nhập email của bạn để thử gửi" /></label>
       <div className="email-config-actions"><button className="save-button" type="button" onClick={() => void saveEmailConfig()} disabled={emailSaving}>{emailSaving ? "Đang lưu..." : "Lưu cấu hình email"}</button><button className="reset-button" type="button" onClick={() => void sendTestEmail()} disabled={emailTesting}>{emailTesting ? "Đang gửi..." : "Gửi email kiểm tra"}</button></div>
       {emailMessage && <p className="save-status" aria-live="polite">{emailMessage}</p>}
+    </section>
+
+    <section className="admin-panel owner-accounts email-send-panel">
+      <h2>Gửi email cho khách hàng</h2>
+      <p className="panel-note">Chọn một tài khoản để gửi thông báo, hướng dẫn hoặc lời nhắn trực tiếp tới email đã đăng ký.</p>
+      <label className="admin-field"><span>Khách hàng nhận email</span><select value={mailTo} onChange={(event) => setMailTo(event.target.value)}><option value="">-- Chọn khách hàng --</option>{accounts.map((account) => <option key={account.username} value={account.username}>{account.username} — {account.email || "Chưa có email"}{account.disabled ? " (đã khóa)" : ""}</option>)}</select></label>
+      <label className="admin-field"><span>Tiêu đề email</span><input value={mailSubject} onChange={(event) => setMailSubject(event.target.value)} placeholder="Thông báo từ PNN-LITTLE" maxLength={180} /></label>
+      <label className="admin-field"><span>Nội dung email</span><textarea value={mailBody} onChange={(event) => setMailBody(event.target.value)} placeholder="Nhập nội dung muốn gửi cho khách hàng..." maxLength={12000} /></label>
+      <button className="save-button" type="button" onClick={() => void sendCustomerEmail()} disabled={mailSending}>{mailSending ? "Đang gửi..." : "Gửi email cho khách hàng"}</button>
+      {mailMessage && <p className="save-status" aria-live="polite">{mailMessage}</p>}
     </section>
 
     <section className="admin-panel owner-accounts"><h2>Giới thiệu & liên hệ footer</h2>{field("intro", "Giới thiệu", true)}{field("links", "Liên kết nhanh (mỗi dòng một mục)", true)}{field("address", "Địa chỉ")}{field("phone", "Điện thoại")}{field("contact", "Email")}{field("facebook", "Facebook")}{field("twitter", "Twitter / X")}<h3 className="owner-subtitle">Mạng xã hội</h3>{socials.map((social, index) => <div className="social-editor" key={social.id}><span className="social-icon">{icon(social.name)}</span><input placeholder="Tên mạng xã hội" value={social.name} onChange={(event) => setSocials(socials.map((item, itemIndex) => itemIndex === index ? { ...item, name: event.target.value } : item))} /><input placeholder="https://..." value={social.url} onChange={(event) => setSocials(socials.map((item, itemIndex) => itemIndex === index ? { ...item, url: event.target.value } : item))} /><button type="button" onClick={() => setSocials(socials.filter((item) => item.id !== social.id))}>Xóa</button></div>)}<button type="button" className="add-line" onClick={() => setSocials([...socials, { id: Date.now(), name: "", url: "" }])}>+ Thêm mạng xã hội</button><h3 className="owner-subtitle">Nội dung trang giới thiệu</h3>{field("landingEyebrow", "Dòng nhỏ phía trên")}{field("landingTitle", "Tiêu đề chính")}{field("landingAccent", "Dòng tiêu đề nổi bật")}{field("landingLead", "Mô tả trang", true)}{field("featureOneTitle", "Tính năng 1 - tiêu đề")}{field("featureOneText", "Tính năng 1 - mô tả", true)}{field("featureTwoTitle", "Tính năng 2 - tiêu đề")}{field("featureTwoText", "Tính năng 2 - mô tả", true)}{field("featureThreeTitle", "Tính năng 3 - tiêu đề")}{field("featureThreeText", "Tính năng 3 - mô tả", true)}<button className="save-button" type="button" onClick={() => void save()}>Lưu tất cả thay đổi</button>{message && <p className="save-status">{message}</p>}</section>

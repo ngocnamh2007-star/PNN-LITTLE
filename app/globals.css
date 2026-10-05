@@ -236,6 +236,7 @@ button { color: inherit; }
 .customer-footer strong { color: #f08abb; letter-spacing: .18em; }
 .owner-accounts { max-width: 1180px; margin: auto; }
 .email-config-panel { margin-top: 18px; }
+.email-send-panel { margin-top: 18px; }
 .panel-note { margin: 5px 0 0; color: #a99aaa; font-size: 12px; line-height: 1.55; }
 .email-config-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
 .email-config-actions .save-button, .email-config-actions .reset-button { margin: 0; }
