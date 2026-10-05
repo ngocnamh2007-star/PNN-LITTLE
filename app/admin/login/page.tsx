@@ -36,8 +36,7 @@ export default function AdminLoginPage() {
     else { const payload = (await response.json()) as { error?: string }; setError(payload.error || "Không thể đăng nhập"); setLoading(false); }
   }
 
-  async function requestReset(event: FormEvent) {
-    event.preventDefault();
+  async function sendResetRequest() {
     if (forgotLoading) return;
     setForgotLoading(true);
     setForgotMessage("");
@@ -54,6 +53,11 @@ export default function AdminLoginPage() {
     }
   }
 
+  async function requestReset(event: FormEvent) {
+    event.preventDefault();
+    await sendResetRequest();
+  }
+
   return (
     <main className="admin-login-page"><div>
       <form className="admin-login-card" onSubmit={submit}>
@@ -68,7 +72,7 @@ export default function AdminLoginPage() {
         {mode === "login" && <button type="button" className="login-switch forgot-password-link" onClick={() => { setForgotOpen(true); setForgotMessage(""); }}>Quên mật khẩu?</button>}
         <button type="button" className="login-switch" onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(""); }}>{mode === "login" ? "Tạo tài khoản mới" : "Đã có tài khoản? Đăng nhập"}</button>
       </form>
-      {forgotOpen && <div className="password-modal-backdrop" onClick={() => setForgotOpen(false)}><section className="admin-panel password-modal" onClick={(event) => event.stopPropagation()}><button type="button" className="password-modal-close" onClick={() => setForgotOpen(false)} aria-label="Đóng">×</button><h2>Quên mật khẩu</h2><p>Nhập email đã đăng ký. Mật khẩu tạm thời gồm 8 ký tự sẽ được gửi tới email này.</p><form onSubmit={requestReset}><label className="admin-field"><span>Email đã đăng ký</span><input type="email" value={forgotEmail} onChange={(event) => setForgotEmail(event.target.value)} required autoFocus /></label><button className="save-button" type="submit" disabled={forgotLoading}>{forgotLoading ? "Đang gửi..." : "Gửi mật khẩu mới"}</button></form>{forgotMessage && <p className="save-status" aria-live="polite">{forgotMessage}</p>}</section></div>}
+      {forgotOpen && <div className="password-modal-backdrop" onClick={() => setForgotOpen(false)}><section className="admin-panel password-modal" onClick={(event) => event.stopPropagation()}><button type="button" className="password-modal-close" onClick={() => setForgotOpen(false)} aria-label="Đóng">×</button><h2>Quên mật khẩu</h2><p>Nhập email đã đăng ký. Mật khẩu tạm thời gồm 8 ký tự sẽ được gửi tới email này.</p><form onSubmit={requestReset}><label className="admin-field"><span>Email đã đăng ký</span><input type="email" value={forgotEmail} onChange={(event) => setForgotEmail(event.target.value)} required autoFocus /></label><button className="save-button" type="button" onClick={() => void sendResetRequest()} disabled={forgotLoading}>{forgotLoading ? "Đang gửi..." : "Gửi mật khẩu mới"}</button></form>{forgotMessage && <p className="save-status" aria-live="polite">{forgotMessage}</p>}</section></div>}
       <footer className="login-footer"><strong>PNN-LITTLE</strong><span>{info.intro}</span><span>☎ {info.phone || info.contact}</span><div className="login-socials">{(info.socialLinks || `Facebook | ${info.facebook}\nTwitter / X | ${info.twitter}`).split("\n").filter(Boolean).map((line) => { const [name, ...parts] = line.split("|"); const url = parts.join("|").trim(); return <a key={line} href={url || undefined} target="_blank" rel="noreferrer">{name.trim()} ↗</a>; })}</div></footer>
     </div></main>
   );
