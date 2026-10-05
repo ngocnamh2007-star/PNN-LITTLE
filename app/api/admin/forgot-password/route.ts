@@ -33,7 +33,10 @@ export async function POST(request: Request) {
       html: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#231327"><h2>PNN-LITTLE</h2><p>Mật khẩu tạm thời của bạn là:</p><p style="font-size:24px;font-weight:700;letter-spacing:4px">${password}</p><p>Vui lòng đăng nhập lại và đổi mật khẩu mới ngay khi truy cập tài khoản.</p><p>Nếu bạn không yêu cầu đặt lại mật khẩu, hãy liên hệ quản trị viên.</p></div>`,
     }),
   });
-  if (!emailResponse.ok) return Response.json({ error: "Không thể gửi email lúc này. Vui lòng thử lại sau." }, { status: 502 });
+  if (!emailResponse.ok) {
+    const error = (await emailResponse.json().catch(() => ({}))) as { message?: string };
+    return Response.json({ error: error.message || "Không thể gửi email lúc này. Vui lòng thử lại sau." }, { status: 502 });
+  }
 
   await resetAdminPasswordByEmail(email, password);
   await revokeAllAdminSessions(account.username);

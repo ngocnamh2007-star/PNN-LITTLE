@@ -45,8 +45,9 @@ async function sendResendEmail(config: EmailConfig, to: string) {
       html: "<div style=\"font-family:Arial,sans-serif;line-height:1.6;color:#231327\"><h2>PNN-LITTLE</h2><p>Email gửi thử đã hoạt động. Chức năng quên mật khẩu có thể gửi mật khẩu tạm thời tới khách hàng.</p></div>",
     }),
   });
-  if (!response.ok) return { ok: false, error: "Resend từ chối email. Hãy kiểm tra API key và email người gửi." };
-  return { ok: true };
+  const result = (await response.json().catch(() => ({}))) as { id?: string; message?: string; name?: string };
+  if (!response.ok) return { ok: false, error: result.message || "Resend từ chối email. Hãy kiểm tra API key, email người gửi và tên miền đã xác minh." };
+  return { ok: true, id: result.id || "" };
 }
 
 export async function GET(request: Request) {
@@ -73,5 +74,5 @@ export async function POST(request: Request) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return Response.json({ error: "Vui lòng nhập email nhận thư hợp lệ" }, { status: 400 });
   const result = await sendResendEmail(await storedConfig(), to);
   if (!result.ok) return Response.json({ error: result.error }, { status: 502 });
-  return Response.json({ ok: true, message: "Email kiểm tra đã được gửi." });
+  return Response.json({ ok: true, message: result.id ? `Email kiểm tra đã được Resend tiếp nhận (mã ${result.id}). Hãy kiểm tra Inbox/Spam.` : "Email kiểm tra đã được Resend tiếp nhận. Hãy kiểm tra Inbox/Spam." });
 }
