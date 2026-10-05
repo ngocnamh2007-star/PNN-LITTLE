@@ -235,6 +235,11 @@ button { color: inherit; }
 .customer-footer p { margin: 0; }
 .customer-footer strong { color: #f08abb; letter-spacing: .18em; }
 .owner-accounts { max-width: 1180px; margin: auto; }
+.email-config-panel { margin-top: 18px; }
+.panel-note { margin: 5px 0 0; color: #a99aaa; font-size: 12px; line-height: 1.55; }
+.email-config-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.email-config-actions .save-button, .email-config-actions .reset-button { margin: 0; }
+.email-config-actions button:disabled { cursor: wait; opacity: .65; }
 .owner-account { display: grid; grid-template-columns: 12px minmax(160px, 1fr) 130px auto auto auto; gap: 12px; align-items: center; padding: 14px 0; border-bottom: 1px solid #ffffff12; color: #c8bbc9; }
 .status-dot { width: 9px; height: 9px; border-radius: 50%; background: #3de58b; box-shadow: 0 0 10px #3de58b; }
 .status-dot.offline { background: #777; box-shadow: none; }

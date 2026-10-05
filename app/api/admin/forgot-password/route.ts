@@ -1,5 +1,6 @@
 import { env } from "cloudflare:workers";
 import { findAdminAccountByEmail, resetAdminPasswordByEmail, revokeAllAdminSessions } from "../../../admin-auth";
+import { readState } from "../../state-store";
 
 function temporaryPassword() {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
@@ -15,9 +16,10 @@ export async function POST(request: Request) {
   const account = await findAdminAccountByEmail(email);
   if (!account) return Response.json({ ok: true, message: "Nếu email đã đăng ký, hướng dẫn đặt lại mật khẩu sẽ được gửi tới email đó." });
 
+  const saved = await readState<{ apiKey?: string; from?: string }>("email-config");
   const runtime = env as unknown as Record<string, unknown>;
-  const apiKey = typeof runtime.RESEND_API_KEY === "string" ? runtime.RESEND_API_KEY : "";
-  const from = typeof runtime.RESET_EMAIL_FROM === "string" && runtime.RESET_EMAIL_FROM ? runtime.RESET_EMAIL_FROM : "PNN-LITTLE <onboarding@resend.dev>";
+  const apiKey = saved?.apiKey || (typeof runtime.RESEND_API_KEY === "string" ? runtime.RESEND_API_KEY : "");
+  const from = saved?.from || (typeof runtime.RESET_EMAIL_FROM === "string" && runtime.RESET_EMAIL_FROM ? runtime.RESET_EMAIL_FROM : "PNN-LITTLE <onboarding@resend.dev>");
   if (!apiKey) return Response.json({ error: "Hệ thống chưa cấu hình dịch vụ gửi email. Vui lòng liên hệ quản trị viên." }, { status: 503 });
 
   const password = temporaryPassword();
