@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-type Account = { username: string; email: string; disabled: boolean };
+type Account = { username: string; fullName: string; email: string; disabled: boolean };
 type Social = { id: number; name: string; url: string };
 type Info = Record<string, string>;
 type EmailConfig = { provider: "resend" | "emailjs"; from: string; hasApiKey: boolean; serviceId: string; templateId: string; publicKey: string; hasPrivateKey: boolean };
@@ -140,7 +140,7 @@ export default function OwnerClient() {
 
     <section className="admin-panel owner-accounts">
       <h2>Tài khoản khách hàng</h2>
-      {accounts.map((account) => <div className="owner-account" key={account.username}><span className={account.disabled ? "status-dot offline" : "status-dot"} /><strong>{account.username}</strong><span>{account.disabled ? "Đã khóa" : "Đang sử dụng"}</span><button onClick={() => void accountAction(account.username, { disabled: !account.disabled })}>{account.disabled ? "Mở khóa" : "Khóa"}</button><button onClick={() => { const password = prompt("Mật khẩu mới (ít nhất 8 ký tự):"); if (password) void accountAction(account.username, { password }); }}>Đổi mật khẩu</button><button className="delete-account-button" onClick={async () => { if (confirm(`Xóa tài khoản ${account.username}?`)) { await fetch(`/api/owner/accounts?username=${encodeURIComponent(account.username)}`, { method: "DELETE" }); await load(); } }}>Xóa</button></div>)}
+      {accounts.map((account) => <div className="owner-account" key={account.username}><span className={account.disabled ? "status-dot offline" : "status-dot"} /><strong>{account.fullName || account.username}</strong><span>{account.disabled ? "Đã khóa" : "Đang sử dụng"}</span><button onClick={() => { const fullName = prompt("Họ và tên khách hàng:", account.fullName || account.username); if (fullName?.trim()) void accountAction(account.username, { fullName: fullName.trim() }); }}>Sửa họ tên</button><button onClick={() => void accountAction(account.username, { disabled: !account.disabled })}>{account.disabled ? "Mở khóa" : "Khóa"}</button><button onClick={() => { const password = prompt("Mật khẩu mới (ít nhất 8 ký tự):"); if (password) void accountAction(account.username, { password }); }}>Đổi mật khẩu</button><button className="delete-account-button" onClick={async () => { if (confirm(`Xóa tài khoản ${account.username}?`)) { await fetch(`/api/owner/accounts?username=${encodeURIComponent(account.username)}`, { method: "DELETE" }); await load(); } }}>Xóa</button></div>)}
     </section>
 
     <section className="admin-panel owner-accounts email-config-panel">

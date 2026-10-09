@@ -88,7 +88,7 @@ export default function AdminPage() {
       if (document.visibilityState === "visible") updateSelection();
     };
     void loadRemoteConfig().then(setConfig);
-    void fetch("/api/admin/me", { cache: "no-store" }).then((response) => response.ok ? response.json() : null).then((data: { username?: string; email?: string; phone?: string; mustChangePassword?: boolean } | null) => { setAccountName(data?.username || ""); setAccountEmail(data?.email || ""); setAccountPhone(data?.phone || ""); if (data?.mustChangePassword) window.dispatchEvent(new Event("admin-force-password")); });
+    void fetch("/api/admin/me", { cache: "no-store" }).then((response) => response.ok ? response.json() : null).then((data: { username?: string; fullName?: string; email?: string; phone?: string; mustChangePassword?: boolean } | null) => { setAccountName(data?.fullName || data?.username || ""); setAccountEmail(data?.email || ""); setAccountPhone(data?.phone || ""); if (data?.mustChangePassword) window.dispatchEvent(new Event("admin-force-password")); });
     void fetch("/api/site-info").then((r) => r.json()).then((data: { info: { intro: string; contact: string } }) => setSiteInfo(data.info));
     updateSelection();
     window.addEventListener("storage", updateSelection);

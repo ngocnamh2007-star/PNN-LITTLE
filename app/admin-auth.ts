@@ -28,6 +28,7 @@ type AdminSessionState = {
 
 type AdminAccount = {
   username: string;
+  fullName?: string;
   email: string;
   phone: string;
   passwordHash: string;
@@ -162,7 +163,7 @@ export async function createAdminAccount(username: string, password: string, ema
   const accounts = (await readState<Record<string, AdminAccount>>(ACCOUNT_KEY)) ?? {};
   if (accounts[cleanUsername.toLowerCase()] || Object.values(accounts).some((account) => account.email?.toLowerCase() === cleanEmail || normalizePhone(account.phone || "") === cleanPhone)) throw new Error("Account exists");
   const passwordHash = await hashPassword(password);
-  accounts[cleanUsername.toLowerCase()] = { username: cleanUsername, email: cleanEmail, phone: cleanPhone, passwordHash, mustChangePassword: false };
+  accounts[cleanUsername.toLowerCase()] = { username: cleanUsername, fullName: cleanUsername, email: cleanEmail, phone: cleanPhone, passwordHash, mustChangePassword: false };
   await writeState(ACCOUNT_KEY, accounts);
 }
 
@@ -187,6 +188,16 @@ export async function setAdminAccountDisabled(username: string, disabled: boolea
   const key = username.trim().toLowerCase();
   if (!accounts[key]) return false;
   accounts[key].disabled = disabled;
+  await writeState(ACCOUNT_KEY, accounts);
+  return true;
+}
+
+export async function setAdminAccountFullName(username: string, fullName: string) {
+  const accounts = await listAdminAccounts();
+  const key = username.trim().toLowerCase();
+  const cleanName = fullName.trim();
+  if (!accounts[key] || !cleanName) return false;
+  accounts[key].fullName = cleanName;
   await writeState(ACCOUNT_KEY, accounts);
   return true;
 }
