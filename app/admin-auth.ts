@@ -126,7 +126,7 @@ function normalizePhone(value: string) {
   return value.replace(/[\s().-]/g, "").replace(/^\+84/, "0");
 }
 
-async function findAdminAccount(identifier: string) {
+export async function findAdminAccount(identifier: string) {
   const clean = identifier.trim().toLowerCase();
   const accounts = await readState<Record<string, AdminAccount>>(ACCOUNT_KEY);
   if (!accounts) return null;
