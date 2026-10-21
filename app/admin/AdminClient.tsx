@@ -88,11 +88,13 @@ export default function AdminPage() {
       if (document.visibilityState === "visible") updateSelection();
     };
     void loadRemoteConfig().then(setConfig);
-    void fetch("/api/admin/me", { cache: "no-store" }).then((response) => response.ok ? response.json() : null).then((data: { username?: string; fullName?: string; email?: string; phone?: string; mustChangePassword?: boolean } | null) => { setAccountName(data?.fullName || data?.username || ""); setAccountEmail(data?.email || ""); setAccountPhone(data?.phone || ""); if (data?.mustChangePassword) window.dispatchEvent(new Event("admin-force-password")); });
+    const updateAccountDetails = () => void fetch("/api/admin/me", { cache: "no-store" }).then((response) => response.ok ? response.json() : null).then((data: { username?: string; fullName?: string; email?: string; phone?: string; mustChangePassword?: boolean } | null) => { setAccountName(data?.fullName || data?.username || ""); setAccountEmail(data?.email || ""); setAccountPhone(data?.phone || ""); if (data?.mustChangePassword) window.dispatchEvent(new Event("admin-force-password")); });
+    updateAccountDetails();
     void fetch("/api/site-info").then((r) => r.json()).then((data: { info: { intro: string; contact: string } }) => setSiteInfo(data.info));
     updateSelection();
     window.addEventListener("storage", updateSelection);
     window.addEventListener("love-selection-updated", updateSelection);
+    window.addEventListener("admin-account-updated", updateAccountDetails);
     document.addEventListener("visibilitychange", updateSelectionWhenVisible);
     const selectionPolling = window.setInterval(updateSelectionWhenVisible, 15000);
     const accountPolling = window.setInterval(() => { void fetch("/api/admin/me", { cache: "no-store" }).then(async (response) => { if (response.status === 401) { const data = (await response.json().catch(() => ({}))) as { code?: string }; window.location.href = data.code === "ACCOUNT_LOCKED" ? "/admin/login?locked=1" : "/admin/login?session=revoked"; return; } const data = (await response.json().catch(() => ({}))) as { mustChangePassword?: boolean }; if (data.mustChangePassword) window.dispatchEvent(new Event("admin-force-password")); }); }, 3000);
@@ -101,6 +103,7 @@ export default function AdminPage() {
       window.clearInterval(accountPolling);
       window.removeEventListener("storage", updateSelection);
       window.removeEventListener("love-selection-updated", updateSelection);
+      window.removeEventListener("admin-account-updated", updateAccountDetails);
       document.removeEventListener("visibilitychange", updateSelectionWhenVisible);
     };
   }, []);
@@ -413,7 +416,7 @@ export default function AdminPage() {
           <p>Chỉnh nội dung một lần, trang người xem sẽ sử dụng đúng nội dung bạn đã lưu.</p>
           {accountName && <div className="signed-in-as"><p>Xin chào <strong>{accountName}</strong></p>{accountMethods && <p>Đang đăng nhập bằng {accountMethods}</p>}</div>}
         </div>
-        <div className="settings-menu-wrap"><button type="button" className="settings-button" aria-label="Cài đặt" onClick={() => setSettingsOpen((value) => !value)}>⚙</button>{settingsOpen && <div className="settings-menu" role="dialog" aria-label="Cài đặt"><div className="settings-menu-header"><strong>Cài đặt</strong><button type="button" className="settings-menu-close" aria-label="Đóng cài đặt" onClick={() => setSettingsOpen(false)}>×</button></div><button type="button" onClick={() => { setSettingsOpen(false); window.dispatchEvent(new Event("admin-open-password")); }}>Đổi mật khẩu</button><button type="button" onClick={() => { setSettingsOpen(false); window.dispatchEvent(new Event("admin-open-sessions")); }}>Lịch sử đăng nhập</button><button type="button" onClick={() => { setSettingsOpen(false); resetAll(); }}>Khôi phục ban đầu</button><button type="button" onClick={() => void logout()}>Đăng xuất</button><button type="button" className="danger-menu-item" onClick={async () => { if (!window.confirm("Xóa tài khoản và toàn bộ dữ liệu của tài khoản này?")) return; const response = await fetch("/api/admin/account", { method: "DELETE" }); if (response.ok) window.location.href = "/admin/login"; }}>Xóa tài khoản</button></div>}</div>
+        <div className="settings-menu-wrap"><button type="button" className="settings-button" aria-label="Cài đặt" onClick={() => setSettingsOpen((value) => !value)}>⚙</button>{settingsOpen && <div className="settings-menu" role="dialog" aria-label="Cài đặt"><div className="settings-menu-header"><strong>Cài đặt</strong><button type="button" className="settings-menu-close" aria-label="Đóng cài đặt" onClick={() => setSettingsOpen(false)}>×</button></div><button type="button" onClick={() => { setSettingsOpen(false); window.dispatchEvent(new Event("admin-open-account-details")); }}>Thông tin tài khoản</button><button type="button" onClick={() => { setSettingsOpen(false); window.dispatchEvent(new Event("admin-open-password")); }}>Đổi mật khẩu</button><button type="button" onClick={() => { setSettingsOpen(false); window.dispatchEvent(new Event("admin-open-sessions")); }}>Lịch sử đăng nhập</button><button type="button" onClick={() => { setSettingsOpen(false); resetAll(); }}>Khôi phục ban đầu</button><button type="button" onClick={() => void logout()}>Đăng xuất</button><button type="button" className="danger-menu-item" onClick={async () => { if (!window.confirm("Xóa tài khoản và toàn bộ dữ liệu của tài khoản này?")) return; const response = await fetch("/api/admin/account", { method: "DELETE" }); if (response.ok) window.location.href = "/admin/login"; }}>Xóa tài khoản</button></div>}</div>
       </header>
 
       <div className="admin-grid">

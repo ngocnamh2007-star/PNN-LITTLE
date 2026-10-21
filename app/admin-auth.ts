@@ -123,7 +123,7 @@ export async function hasAdminAccount() {
   return Boolean(accounts && Object.keys(accounts).length);
 }
 
-function normalizePhone(value: string) {
+export function normalizePhone(value: string) {
   return value.replace(/[\s().-]/g, "").replace(/^\+84/, "0");
 }
 
@@ -198,6 +198,18 @@ export async function setAdminAccountFullName(username: string, fullName: string
   const cleanName = fullName.trim();
   if (!accounts[key] || !cleanName) return false;
   accounts[key].fullName = cleanName;
+  await writeState(ACCOUNT_KEY, accounts);
+  return true;
+}
+
+export async function updateAdminAccountContact(username: string, email: string, phone: string) {
+  const accounts = await listAdminAccounts();
+  const key = username.trim().toLowerCase();
+  const cleanEmail = email.trim().toLowerCase();
+  const cleanPhone = normalizePhone(phone);
+  if (!accounts[key] || !cleanEmail || !cleanPhone) return false;
+  accounts[key].email = cleanEmail;
+  accounts[key].phone = cleanPhone;
   await writeState(ACCOUNT_KEY, accounts);
   return true;
 }
